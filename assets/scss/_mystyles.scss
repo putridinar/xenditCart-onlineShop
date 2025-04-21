@@ -1,0 +1,65 @@
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
+@use 'base/base' as *;
+@use 'components/grid-product';
+
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    text-align: center;
+    overflow: hidden;
+    transition: 0.3s ease;
+	@include mobile {
+    grid-template-columns: repeat(1, 1fr);
+	}
+	.card {
+      overflow: hidden;
+	img.card-img-top {
+      overflow: hidden;
+		max-height: 220px;
+		height: 100vh;
+		object-fit: cover;
+		background-position: center;
+		background-size: cover;
+		@include mobile {
+		}
+	  }
+    }
+.product-detail {
+    .product-title {
+      margin: 1rem 0 0.5rem;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .product-price {
+      color: #ff5722;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+
+    .btn-buy {
+      background: #ff5722;
+      color: #fff;
+      text-decoration: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 1rem;
+      transition: background 0.3s;
+
+      &:hover {
+        background: #e64a19;
+      }
+	}
+  }
+
+  .loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+  }
+}

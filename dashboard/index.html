@@ -1,0 +1,114 @@
+---
+layout: default
+title: Dashboard Admin
+permalink: /dashboard
+---
+
+<h2>Tambah Produk</h2>
+
+<form id="productForm">
+  <div>
+    <label>Nama Produk</label>
+    <input type="text" id="productName" required>
+  </div>
+
+  <div>
+    <label>Harga Produk (Rp)</label>
+    <input type="number" id="productPrice" required>
+  </div>
+
+  <div>
+    <label>Kategori</label>
+    <input type="text" id="productCategory" required>
+  </div>
+
+  <div>
+    <label>URL Gambar</label>
+    <input type="url" id="productImage" required>
+  </div>
+
+  <div>
+    <label>Warna Produk (pisahkan dengan koma)</label>
+    <input type="text" id="productColors" placeholder="Misal: Hitam, Putih, Merah" required>
+  </div>
+
+  <div>
+    <label>Ukuran Produk (pisahkan dengan koma)</label>
+    <input type="text" id="productSizes" placeholder="Misal: S, M, L, XL" required>
+  </div>
+
+  <button type="submit">Upload Produk</button>
+</form>
+
+<div id="statusMessage"></div>
+
+<button id="logoutBtn" class="btn btn-danger">Logout</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "/login"; // tendang ke login
+  }
+});
+
+// Tombol Logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    alert("Logout berhasil, boss!");
+    window.location.href = "/login";
+  }).catch((error) => {
+    alert("Logout gagal: " + error.message);
+  });
+});
+
+const form = document.getElementById("productForm");
+const statusMsg = document.getElementById("statusMessage");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("productName").value.trim();
+  const price = parseInt(document.getElementById("productPrice").value);
+  const category = document.getElementById("productCategory").value.trim();
+  const image = document.getElementById("productImage").value.trim();
+  const colors = document.getElementById("productColors").value.split(",").map(c => c.trim()).filter(Boolean);
+  const sizes = document.getElementById("productSizes").value.split(",").map(s => s.trim()).filter(Boolean);
+
+  try {
+    await addDoc(collection(db, "products"), {
+      name,
+      price,
+      category,
+      image,
+      colors,
+      sizes
+    });
+
+    statusMsg.textContent = "Produk berhasil di-upload! 🎉";
+    statusMsg.style.color = "green";
+    form.reset();
+
+  } catch (error) {
+    statusMsg.textContent = `Error: ${error.message}`;
+    statusMsg.style.color = "red";
+  }
+});
+</script>

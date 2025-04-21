@@ -1,0 +1,115 @@
+---
+layout: default
+title: 
+permalink: /product
+---
+<div id="productDetail" class="product-single text-center">
+  Memuat detail produk...
+</div>
+
+
+<script src="{{ '/assets/js/xenditCart.js' | relative_url }}"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+const container = document.getElementById("productDetail");
+let importProduct = null;
+
+async function loadProduct() {
+  if (!id) {
+    container.innerHTML = "<p>Produk tidak ditemukan.</p>";
+    return;
+  }
+
+  try {
+    const docRef = doc(db, "products", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      importProduct = docSnap.data();
+
+      let warnaButtons = importProduct.colors?.map(color => `
+        <button type="button" class="btn btn-outline-dark m-1" onclick="selectOption('color', '${color}')">${color}</button>
+      `).join('') || '';
+
+      let ukuranButtons = importProduct.sizes?.map(size => `
+        <button type="button" class="btn btn-outline-dark m-1" onclick="selectOption('size', '${size}')">${size}</button>
+      `).join('') || '';
+
+      container.innerHTML = `
+        <div class="product-single">
+		<div class="single-img">
+          <img class="img-fluid mb-3" src="${importProduct.image}" alt="${importProduct.name}">
+		</div>
+		  <div class="single-detail">
+          <h1>${importProduct.name}</h1>
+          <p class="product-price">Rp ${importProduct.price.toLocaleString('id-ID')}</p>
+          <p>Kategori: ${importProduct.category}</p>
+        <div><strong>Pilih Warna:</strong><br>${warnaButtons}</div>
+        <div class="mt-2"><strong>Pilih Ukuran:</strong><br>${ukuranButtons}</div>
+        <button class="btn btn-primary mt-4" onclick="addToCartSingle()">Tambah ke Keranjang</button>
+		  </div>
+        </div>
+      `;
+
+    } else {
+      container.innerHTML = "<p>Produk tidak ditemukan.</p>";
+    }
+  } catch (error) {
+    container.innerHTML = `<p>Gagal memuat produk: ${error.message}</p>`;
+  }
+}
+
+window.selectedOptions = {};
+
+window.selectOption = function(type, value) {
+  window.selectedOptions[type] = value;
+  alert(`${type.toUpperCase()} dipilih: ${value}`);
+}
+
+window.addToCartSingle = function() {
+  if (!importProduct) {
+    alert("Produk belum termuat.");
+    return;
+  }
+  if (!window.selectedOptions.color || !window.selectedOptions.size) {
+    alert("Pilih WARNA dan UKURAN dulu!");
+    return;
+  }
+
+function addToCart(importProduct) {
+  cart.push(importProduct);
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert(`Produk "${importProduct.name}" berhasil ditambahkan ke keranjang!`);
+}
+
+addToCart({
+  name: importProduct.name,
+  price: importProduct.price,
+  image: importProduct.image,
+  color: window.selectedOptions.color,
+  size: window.selectedOptions.size,
+  quantity: 1
+});
+
+}
+
+loadProduct();
+</script>

@@ -1,0 +1,55 @@
+<div class="product-grid" id="productGrid">
+  <div class="loading">Memuat produk...</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Fetch & Render Produk
+async function fetchAndRenderProducts() {
+  const grid = document.getElementById("productGrid");
+
+  try {
+    const querySnapshot = await getDocs(collection(db, "products"));
+    grid.innerHTML = ""; // Hapus loading
+
+    if (querySnapshot.empty) {
+      grid.innerHTML = "<p class='loading'>Produk belum tersedia.</p>";
+      return;
+    }
+
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      grid.innerHTML += `
+        <div class="card">
+          <img class="card-img-top" src="${data.image}" alt="${data.name}">
+		  <div class="product-detail">
+          <h2 class="product-title">${data.name}</h2>
+          <p class="product-price">Rp ${data.price.toLocaleString('id-ID')}</p>
+          <a href="/product?id=${doc.id}" class="btn-buy">Lihat Produk</a>
+		  </div>
+        </div>
+      `;
+    });
+
+  } catch (error) {
+    grid.innerHTML = `<p class='loading'>Gagal memuat produk: ${error.message}</p>`;
+  }
+}
+
+fetchAndRenderProducts();
+</script>

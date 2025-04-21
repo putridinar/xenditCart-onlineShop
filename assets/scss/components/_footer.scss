@@ -1,0 +1,26 @@
+@use 'sass:color';
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.footer {
+  width: 100%;
+  background-color: color.adjust($primary-color, $lightness: -10%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+
+  a {
+    color: $secondary-color;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  @include mobile {
+    padding: 1.5rem 1rem;
+    font-size: 0.75rem;
+  }
+}

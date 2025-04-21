@@ -1,0 +1,56 @@
+# Jekyll Settings
+
+title: Jekyll Now
+description: Create a Jekyll Blog in minutes
+
+avatar: https://raw.githubusercontent.com/barryclark/jekyll-now/master/images/jekyll-logo.png
+
+footer-links:
+  dribbble:
+  email:
+  facebook:
+  flickr:
+  github: 
+  instagram:
+  linkedin:
+  pinterest:
+  rss: 
+  twitter: jekyllrb
+  stackoverflow: 
+  youtube: 
+disqus:
+
+google_analytics:
+
+url: 
+baseurl: ""
+
+markdown: kramdown
+highlighter: pygments
+permalink: /:title/
+
+version: v2.0.1
+
+sass:
+  sass_dir: assets/scss
+  style: :compressed 
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-archives
+  - jekyll-paginate
+
+jekyll-archives:
+  enabled:
+    - categories
+    - tags
+  permalinks:
+    categories: '/category/:name/'
+    tags: '/tag/:name/'
+    
+exclude:
+    - Gemfile
+    - Gemfile.lock
+    - LICENSE
+    - README.md

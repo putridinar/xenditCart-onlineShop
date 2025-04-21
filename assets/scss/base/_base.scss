@@ -1,0 +1,15 @@
+@use '../abstracts/variables' as *;
+
+body {
+  background-color: $background-color;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none !important;
+
+  &:hover {
+    text-decoration: none !important;
+	color: $link-color;
+  }
+}

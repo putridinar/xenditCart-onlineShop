@@ -1,0 +1,76 @@
+<div class="filter-bar">
+  <select id="categoryFilter">
+    <option value="">Semua Kategori</option>
+    <option value="Elektronik">Elektronik</option>
+    <option value="Fashion">Fashion</option>
+    <option value="Aksesoris">Aksesoris</option>
+  </select>
+
+  <select id="priceFilter">
+    <option value="">Semua Harga</option>
+    <option value="50000">Di bawah Rp 50.000</option>
+    <option value="100000">Di bawah Rp 100.000</option>
+    <option value="200000">Di bawah Rp 200.000</option>
+  </select>
+</div>
+
+<div class="product-grid" id="productGrid">
+  <div class="loading">Memuat produk...</div>
+</div>
+<script type="module">
+async function fetchProducts(category = "", maxPrice = "") {
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = "<div class='loading'>Memuat produk...</div>";
+
+  try {
+    let productRef = collection(db, "products");
+    let conditions = [];
+
+    if (category) {
+      conditions.push(where("category", "==", category));
+    }
+
+    if (maxPrice) {
+      conditions.push(where("price", "<=", parseInt(maxPrice)));
+    }
+
+    const q = conditions.length > 0 ? query(productRef, ...conditions) : productRef;
+    const querySnapshot = await getDocs(q);
+
+    grid.innerHTML = "";
+
+    if (querySnapshot.empty) {
+      grid.innerHTML = "<p class='loading'>Produk tidak ditemukan.</p>";
+      return;
+    }
+
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      grid.innerHTML += `
+        <div class="product-card">
+          <img src="${data.image}" alt="${data.name}">
+          <h2 class="product-title">${data.name}</h2>
+          <p class="product-price">Rp ${data.price.toLocaleString('id-ID')}</p>
+          <a href="${data.url}" class="btn-buy">Beli Sekarang</a>
+        </div>
+      `;
+    });
+
+  } catch (error) {
+    grid.innerHTML = `<p class='loading'>Gagal memuat produk: ${error.message}</p>`;
+  }
+}
+
+// Trigger filter dari dropdown
+document.getElementById("categoryFilter").addEventListener("change", applyFilters);
+document.getElementById("priceFilter").addEventListener("change", applyFilters);
+
+function applyFilters() {
+  const category = document.getElementById("categoryFilter").value;
+  const price = document.getElementById("priceFilter").value;
+  fetchProducts(category, price);
+}
+
+// Load awal
+fetchProducts();
+</script>

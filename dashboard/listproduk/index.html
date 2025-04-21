@@ -1,0 +1,95 @@
+---
+layout: default
+title: List produk
+permalink: /dashboard/list-product
+---
+
+<h2>Daftar Produk</h2>
+<div id="productList" class="product-list">Memuat produk...</div>
+
+<button id="logoutBtn" class="btn btn-danger mt-4">Logout</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "/login";
+  } else {
+    loadProducts();
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    alert("Logout berhasil!");
+    window.location.href = "/login";
+  });
+});
+
+async function loadProducts() {
+  const listContainer = document.getElementById("productList");
+  try {
+    const querySnapshot = await getDocs(collection(db, "products"));
+    if (querySnapshot.empty) {
+      listContainer.innerHTML = "<p>Belum ada produk!</p>";
+      return;
+    }
+
+    let html = "<ul class='list-group'>";
+    querySnapshot.forEach(docItem => {
+      const p = docItem.data();
+      html += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>${p.name}</strong> <br>
+            Harga: Rp ${p.price.toLocaleString('id-ID')} <br>
+            Kategori: ${p.category}
+          </div>
+          <div>
+            <button class="btn btn-sm btn-warning me-2" onclick="editProduct('${docItem.id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${docItem.id}')">Hapus</button>
+          </div>
+        </li>
+      `;
+    });
+    html += "</ul>";
+    listContainer.innerHTML = html;
+
+  } catch (error) {
+    listContainer.innerHTML = `<p>Gagal memuat produk: ${error.message}</p>`;
+  }
+}
+
+window.deleteProduct = async function(id) {
+  if (confirm("Yakin ingin menghapus produk ini?")) {
+    try {
+      await deleteDoc(doc(db, "products", id));
+      alert("Produk berhasil dihapus.");
+      loadProducts(); // reload list
+    } catch (error) {
+      alert("Error hapus produk: " + error.message);
+    }
+  }
+}
+
+window.editProduct = function(id) {
+  window.location.href = `/dashboard/edit-product?id=${id}`;
+}
+</script>

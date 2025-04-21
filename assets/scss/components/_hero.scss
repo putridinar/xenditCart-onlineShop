@@ -1,0 +1,50 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.hero {
+    position: relative;
+    width: 100%;
+    padding: 4rem 2rem;
+    background-image: url(/assets/images/normad.jpg);
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    text-align: center;
+    z-index: 0;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0; // shorthand untuk top:0; right:0; bottom:0; left:0;
+        background: linear-gradient(135deg, #4f46e5, #22d3ee);
+        opacity: 0.7; // sesuaikan transparansinya
+        z-index: -1; // letakkan di belakang teks tapi di atas background-image
+    }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: rgb(44 37 149);
+    text-shadow: 2px 3px 8px #c2e3ef;
+  }
+
+  p {
+    font-size: 1.25rem;
+    max-width: 600px;
+    margin: 0 auto;
+    color: #19499f;
+    text-shadow: 0 0 8px #256b7d;
+  }
+
+  @include mobile {
+    padding: 2rem 1rem;
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    p {
+      font-size: 1rem;
+    }
+  }
+}
