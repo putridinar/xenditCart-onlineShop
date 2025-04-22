@@ -1,20 +1,20 @@
 <header class="header bg-white shadow-sm mb-4">
 	<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
 	  <div class="container">
-		<a class="navbar-brand fw-bold" href="{{ site.baseurl }}/">{{ site.title }}</a>
-		
+		<div class="d-flex">
 <!-- Tambahan di Navbar -->
-<div class="dropdown ms-3" id="dropProfile" style="display:none;">
+<div class="dropdown" id="dropProfile" style="display:none;">
   <button class="btn btn-light border-0 p-0" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-    <img id="profilePic" src="/default-avatar.png" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover; border:2px solid #ccc;">
+    <img id="profilePic" src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover; border:2px solid #ccc;">
   </button>
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+  <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="userMenu">
     <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">Profile Saya</button></li>
     <li><hr class="dropdown-divider"></li>
     <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
   </ul>
 </div>
-
+		<a class="navbar-brand fw-bold ms-2" href="{{ site.baseurl }}/">{{ site.title }}</a>
+</div>
 		<div class="absolutemee">
 		<button class="btn btn-outline-dark d-lg-none me-2 position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" aria-controls="cartCanvas">
 		  <i class="bi bi-cart"></i>
@@ -134,78 +134,81 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+function showCartToast(message = "Keranjang diperbarui!") {
+  const toastEl = document.getElementById('cartToast');
+  const toastMsg = document.getElementById('cartToastMessage');
+  
+  toastMsg.innerText = message;
+  
+  const toast = new bootstrap.Toast(toastEl);
+  toast.show();
+}
+
 async function renderCart() {
-  const cartItems = document.getElementById('cartItems');
-  const cartCount = document.getElementById('cartCount');
-  const cartTotal = document.getElementById('cartTotal');
+  if (!currentUser) return; // Cek login
 
-  if (!currentUser) {
-    cartItems.innerHTML = `<p class="text-center text-muted">Silakan login untuk melihat keranjang.</p>`;
-    cartCount.innerText = "0"; // 🔥 RESET
-    cartTotal.innerText = "Rp 0";
-    return;
-  }
-
-  cartItems.innerHTML = `<div class="text-center py-3">Loading keranjang...</div>`;
+  const cartItemsEl = document.getElementById('cartItems');
+  const cartCountMobile = document.getElementById('cartCountMobile');
+  const cartCountDesktop = document.getElementById('cartCountDesktop');
+  const cartTotalEl = document.getElementById('cartTotal');
 
   try {
-    const q = collection(db, `carts/${currentUser.uid}/items`);
-    const snapshot = await getDocs(q);
+    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
+    const snapshot = await getDocs(cartRef);
 
-    if (snapshot.empty) {
-      cartItems.innerHTML = `<p class="text-center text-muted">Keranjang kosong.</p>`;
-      cartCount.innerText = "0"; // 🔥 TAMPIL 0
-      cartTotal.innerText = "Rp 0";
-      return;
-    }
-
+    let cartHTML = '';
+    let totalItems = 0;
     let totalPrice = 0;
-    cartItems.innerHTML = "";
 
     snapshot.forEach(docSnap => {
       const item = docSnap.data();
+      const itemId = docSnap.id;
+
+      totalItems += item.quantity;
       totalPrice += item.price * item.quantity;
 
-      cartItems.innerHTML += `
+      cartHTML += `
         <div class="d-flex mb-3 border-bottom pb-2">
           <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover;" class="rounded me-3">
           <div class="flex-grow-1">
             <h6 class="mb-1">${item.name}</h6>
-            <small class="text-muted">Warna: ${item.color} | Ukuran: ${item.size}</small><br>
+            <small class="text-muted">Warna: ${item.color || '-'}</small> | 
+            <small class="text-muted">Ukuran: ${item.size || '-'}</small><br>
             <small class="text-muted">Jumlah: ${item.quantity}</small><br>
             <strong>Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</strong>
           </div>
-          <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeCartItem('${docSnap.id}')" style="height:fit-content;">
+          <button class="btn btn-sm btn-outline-danger ms-2" style="height: fit-content;" onclick="removeCartItem('${itemId}')">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
       `;
     });
 
-    cartCount.innerText = snapshot.size; // 🔥 SET jumlah item di badge
-	// 🔥 Animasi Shake
-	cartCount.classList.remove('shake'); // Reset dulu
-	void cartCount.offsetWidth; // FORCE Reflow supaya animasi bisa diulang
-	cartCount.classList.add('shake'); // Kasih class shake
-    cartTotal.innerText = "Rp " + totalPrice.toLocaleString('id-ID');
+    cartItemsEl.innerHTML = snapshot.empty
+      ? `<p class="text-center text-muted">Keranjang kosong.</p>`
+      : cartHTML;
+
+    if (cartCountMobile) cartCountMobile.innerText = totalItems;
+    if (cartCountDesktop) cartCountDesktop.innerText = totalItems;
+    if (cartTotalEl) cartTotalEl.innerText = "Rp " + totalPrice.toLocaleString('id-ID');
 
   } catch (error) {
-    console.error(error);
-    cartItems.innerHTML = `<p class="text-danger text-center">Gagal memuat keranjang.</p>`;
+    console.error('Error load cart:', error);
+    if (cartItemsEl) cartItemsEl.innerHTML = `<p class="text-danger">Gagal memuat keranjang.</p>`;
   }
 }
 
-
+// Fungsi hapus item dari keranjang
 window.removeCartItem = async function(itemId) {
   if (!currentUser) return;
 
   try {
     await deleteDoc(doc(db, `carts/${currentUser.uid}/items/${itemId}`));
-    showToast("Item dihapus dari keranjang", "warning");
-    renderCart();
+    showCartToast("🗑️ Item dihapus dari keranjang!");
+    renderCart(); // Refresh setelah hapus
   } catch (error) {
-    console.error(error);
-    showToast("Gagal hapus item", "danger");
+    console.error('Error hapus item:', error);
+    showCartToast("❌ Gagal hapus item!", "danger");
   }
 }
 
@@ -217,3 +220,13 @@ if (cartOffcanvas) {
   });
 }
 </script>
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+  <div id="cartToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="cartToastMessage">
+        Keranjang diperbarui.
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>

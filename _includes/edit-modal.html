@@ -64,7 +64,7 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     profileEmail.value = user.email;
     profileName.value = user.displayName || "Nama Tidak Tersedia";
-    profilePic.src = user.photoURL || 'https://raw.githubusercontent.com/barryclark/jekyll-now/master/images/jekyll-logo.png';
+    profilePic.src = user.photoURL || 'https://ionicframework.com/docs/img/demos/avatar.svg';
 
     // Load alamat dari Firestore
     const docRef = doc(db, "users", user.uid);

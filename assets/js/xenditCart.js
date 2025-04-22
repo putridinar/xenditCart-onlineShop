@@ -23,6 +23,17 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
 });
 
+function renderCart() {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const cartCountMobile = document.getElementById('cartCountMobile');
+  const cartCountDesktop = document.getElementById('cartCountDesktop');
+  
+  let totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (cartCountMobile) cartCountMobile.innerText = totalItems;
+  if (cartCountDesktop) cartCountDesktop.innerText = totalItems;
+}
+
 async function checkoutCart() {
   if (!currentUser) {
     showToast("Silakan login untuk checkout!", "warning");
@@ -77,4 +88,3 @@ async function checkoutCart() {
   }
 }
 window.checkoutCart = checkoutCart;
-window.renderCart = renderCart

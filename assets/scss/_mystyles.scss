@@ -4,6 +4,11 @@
 @use 'components/grid-product';
 @use 'components/product';
 
+.row-space {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
 .product-grid {
     display: grid;
@@ -13,18 +18,19 @@
     overflow: hidden;
     transition: 0.3s ease;
 	@include mobile {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 	}
 	.card {
       overflow: hidden;
 	img.card-img-top {
       overflow: hidden;
 		max-height: 220px;
-		height: 100vh;
+		height: 100%;
 		object-fit: cover;
 		background-position: center;
 		background-size: cover;
 		@include mobile {
+			height: 180px;
 		}
 	  }
     }

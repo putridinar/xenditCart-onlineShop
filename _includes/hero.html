@@ -4,11 +4,44 @@
         <h1 class="display-4 fw-bold lh-1">{{site.title}}</h1>
         <p class="lead">{{site.description}}.</p>
         <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
-          <a href="{{site.baseurl}}/userLogin" type="button" class="btn btn-primary btn-lg px-4 me-md-2 fw-bold">Login</a>
+          <a href="{{site.baseurl}}/userLogin" type="button" id="log-in" class="btn btn-primary btn-lg px-4 me-md-2 fw-bold" style="display:none;">Login</a>
           <a href="{{site.baseurl}}/allProduct" type="button" class="btn btn-outline-secondary btn-lg px-4">Product</a>
         </div>
       </div>
-      <div class="col-lg-4 offset-lg-1 p-0 overflow-hidden shadow-lg">
+      <div class="col-lg-4 offset-lg-1 p-0 overflow-hidden shadow-lg" style="height:240px;">
 	  <img class="rounded-lg-3" src="{{site.avatar}}" alt="" width="420"></div>
 	 </div>
 </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+
+let currentUser = null;
+
+const logInbtn = document.getElementById('log-in');
+
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    logInbtn.style.display = 'none';
+  } else {
+    currentUser = null;
+    logInbtn.style.display = "block";
+  }
+});
+</script>

@@ -16,10 +16,10 @@ permalink: /product
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-
+// 🔥 Inisialisasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
   authDomain: "tokoputridinar.firebaseapp.com",
@@ -29,15 +29,14 @@ const firebaseConfig = {
   appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
   measurementId: "G-M2JGJH3NVQ"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-let currentUser = null;
 
-// 🔥 Dapatkan user yang sedang login
+let currentUser = null;
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  if (user) checkLikedStatus();
 });
 
 const params = new URLSearchParams(window.location.search);
@@ -45,7 +44,10 @@ const id = params.get("id");
 const container = document.getElementById("productDetail");
 
 let importProduct = null;
+let selectedOptions = { color: null, size: null };
+let quantityInterval = null;
 
+// 🔥 Load Produk dari Firestore
 async function loadProduct() {
   if (!id) {
     container.innerHTML = "<p>Produk tidak ditemukan.</p>";
@@ -53,73 +55,57 @@ async function loadProduct() {
   }
 
   try {
-    const docRef = doc(db, "products", id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      importProduct = docSnap.data();
-      
-      let warnaButtons = importProduct.colors?.map(color => `
-        <button type="button" class="btn btn-outline-secondary color-btn" data-color="${color}">${color}</button>
-      `).join('') || '';
-
-      let ukuranButtons = importProduct.sizes?.map(size => `
-        <button type="button" class="btn btn-outline-secondary size-btn" data-size="${size}">${size}</button>
-      `).join('') || '';
-
-      container.innerHTML = `
-      <div class="col-md-6">
-        <img class="img-fluid rounded shadow-sm" src="${importProduct.image}" alt="${importProduct.name}" style="width:100vw;">
-      </div>
-
-      <div class="col-md-6">
-        <h2 class="mb-3">${importProduct.name}</h2>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="h4 mb-0 me-2 text-primary">Rp ${importProduct.price.toLocaleString('id-ID')}</span>
-          <button class="btn btn-outline-danger btn-like" id="likeButton">
-            <i class="bi bi-heart"></i> <span>Like</span>
-          </button>
-        </div>
-        <p class="text-muted mb-4">${importProduct.description || ''}</p>
-
-        <div class="mb-4">
-          <h6 class="mb-2">Pilih Warna:</h6>
-          <div class="d-flex flex-wrap gap-2" id="colorOptions">${warnaButtons}</div>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="mb-2">Pilih Ukuran:</h6>
-          <div class="d-flex flex-wrap gap-2" id="sizeOptions">${ukuranButtons}</div>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="mb-2">Jumlah:</h6>
-          <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary" id="decreaseQty">-</button>
-            <input type="text" id="quantityInput" class="form-control text-center mx-2" value="1" style="width: 60px;" readonly>
-            <button class="btn btn-outline-secondary" id="increaseQty">+</button>
-          </div>
-        </div>
-
-        <div class="d-grid gap-2">
-          <button class="btn btn-primary btn-lg" id="addToCartButton">Tambah ke Keranjang</button>
-        </div>
-      </div>`;
-
-      setupInteractions();
-    } else {
+    const docSnap = await getDoc(doc(db, "products", id));
+    if (!docSnap.exists()) {
       container.innerHTML = "<p>Produk tidak ditemukan.</p>";
+      return;
     }
+
+    importProduct = docSnap.data();
+    renderProductDetail(importProduct);
+    setupInteractions();
   } catch (error) {
     container.innerHTML = `<p>Gagal memuat produk: ${error.message}</p>`;
   }
 }
 
-let selectedOptions = {
-  color: null,
-  size: null,
-};
+// 🔥 Render Produk ke HTML
+function renderProductDetail(product) {
+  let warnaButtons = product.colors?.map(color => `<button type="button" class="btn btn-outline-secondary color-btn" data-color="${color}">${color}</button>`).join('') || '';
+  let ukuranButtons = product.sizes?.map(size => `<button type="button" class="btn btn-outline-secondary size-btn" data-size="${size}">${size}</button>`).join('') || '';
 
+  container.innerHTML = `
+    <div class="col-md-6">
+      <img class="img-fluid rounded shadow-sm" src="${product.image}" alt="${product.name}" style="width:100vw;">
+    </div>
+    <div class="col-md-6">
+      <h2 class="mb-3">${product.name}</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="h4 mb-0 text-primary">Rp ${product.price.toLocaleString('id-ID')}</span>
+        <button class="btn btn-outline-danger btn-like" id="likeButton">
+          <i class="bi bi-heart"></i> <span>Like</span>
+        </button>
+      </div>
+      <p class="text-muted">${product.description || ''}</p>
+      <div class="mb-4"><h6>Pilih Warna:</h6><div id="colorOptions" class="d-flex gap-2">${warnaButtons}</div></div>
+      <div class="mb-4"><h6>Pilih Ukuran:</h6><div id="sizeOptions" class="d-flex gap-2">${ukuranButtons}</div></div>
+      <div class="mb-4">
+        <h6>Jumlah:</h6>
+        <div class="d-flex">
+          <button class="btn btn-outline-secondary" id="decreaseQty">-</button>
+          <input type="text" id="quantityInput" class="form-control text-center mx-2" value="1" style="width: 60px;" readonly>
+          <button class="btn btn-outline-secondary" id="increaseQty">+</button>
+        </div>
+      </div>
+		<div class="row-space">
+		  <button class="btn btn-success">Beli Sekarang</button>
+		  
+		  <button class="btn btn-primary" id="addToCartButton">Tambah ke Keranjang</button>
+		</div>
+    </div>`;
+}
+
+// 🔥 Setup Semua Interaksi
 function setupInteractions() {
   document.querySelectorAll('.color-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -136,86 +122,85 @@ function setupInteractions() {
       btn.classList.add('active');
     });
   });
-  
-let quantityInterval = null; // 🔥 Simpan global
 
+  const qtyInput = document.getElementById('quantityInput');
+  document.getElementById('increaseQty').addEventListener('click', () => {
+    if (parseInt(qtyInput.value) < importProduct.stock) {
+      animateQuantity(qtyInput, parseInt(qtyInput.value) + 1);
+    } else {
+      showToast("Stok tidak cukup!", "warning");
+    }
+  });
+  document.getElementById('decreaseQty').addEventListener('click', () => {
+    if (parseInt(qtyInput.value) > 1) {
+      animateQuantity(qtyInput, parseInt(qtyInput.value) - 1);
+    }
+  });
+
+  document.getElementById('addToCartButton').addEventListener('click', () => {
+    if (!selectedOptions.color || !selectedOptions.size) {
+      showToast("Pilih warna dan ukuran dulu!", "warning");
+      return;
+    }
+    addToCartFirestore({
+      name: importProduct.name,
+      price: importProduct.price,
+      image: importProduct.image,
+      color: selectedOptions.color,
+      size: selectedOptions.size,
+      quantity: parseInt(qtyInput.value)
+    });
+  });
+
+  const likeButton = document.getElementById('likeButton');
+  likeButton.addEventListener('click', toggleLikeProduct);
+}
+
+// 🔥 Animasi Quantity
 function animateQuantity(input, newValue) {
-  if (quantityInterval) {
-    clearInterval(quantityInterval); // 🔥 Bersihkan interval lama dulu
-  }
-
-  const currentVal = parseInt(input.value);
-  const diff = newValue - currentVal;
-  if (diff === 0) return;
-
-  let step = diff > 0 ? 1 : -1;
-
+  if (quantityInterval) clearInterval(quantityInterval);
+  const step = newValue > parseInt(input.value) ? 1 : -1;
   quantityInterval = setInterval(() => {
-    let current = parseInt(input.value);
-    input.value = current + step;
-
+    input.value = parseInt(input.value) + step;
     if (parseInt(input.value) === newValue) {
-      clearInterval(quantityInterval); // Clear interval setelah selesai
-      quantityInterval = null; // Reset
+      clearInterval(quantityInterval);
+      quantityInterval = null;
     }
   }, 50);
 }
 
-const qtyInput = document.getElementById('quantityInput');
-
-document.getElementById('increaseQty').addEventListener('click', () => {
-  let current = parseInt(qtyInput.value);
-  animateQuantity(qtyInput, current + 1);
-});
-
-document.getElementById('decreaseQty').addEventListener('click', () => {
-  let current = parseInt(qtyInput.value);
-  if (current > 1) animateQuantity(qtyInput, current - 1);
-});
-
-
-  // Like button
-// Variabel global
-let currentUser = null;
-onAuthStateChanged(auth, (user) => {
-  currentUser = user;
-  if (user) {
-    checkLikedStatus(); // 🔥 Cek status like pas login
+// 🔥 Add ke Cart Firestore
+async function addToCartFirestore(item) {
+  if (!currentUser) {
+    showToast("Silakan login dulu untuk belanja!", "warning");
+    setTimeout(() => window.location.href = "/userLogin", 800);
+    return;
   }
-});
 
-const likeButton = document.getElementById('likeButton');
+  try {
+    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
+    const q = query(cartRef, where("name", "==", item.name), where("color", "==", item.color), where("size", "==", item.size));
+    const snapshot = await getDocs(q);
 
-// Fungsi cek apakah user sudah like produk ini
-async function checkLikedStatus() {
-  if (!currentUser) return;
-  
-  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
-  const likeSnap = await getDoc(likeRef);
-
-  if (likeSnap.exists()) {
-    setLikedUI(true);
-  } else {
-    setLikedUI(false);
+    if (snapshot.empty) {
+      await addDoc(cartRef, item);
+      showToast("✅ Produk ditambahkan ke keranjang!", "success");
+    } else {
+      snapshot.forEach(async docSnap => {
+        await updateDoc(doc(db, `carts/${currentUser.uid}/items/${docSnap.id}`), {
+          quantity: docSnap.data().quantity + item.quantity
+        });
+        showToast("✅ Jumlah produk di keranjang diperbarui!", "success");
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    showToast("Gagal tambah ke keranjang: " + error.message, "danger");
   }
 }
 
-// Fungsi ubah tampilan tombol Like
-function setLikedUI(isLiked) {
-  const icon = likeButton.querySelector('i');
-  if (isLiked) {
-    likeButton.classList.add('btn-danger');
-    likeButton.classList.remove('btn-outline-danger');
-    icon.classList.replace('bi-heart', 'bi-heart-fill');
-  } else {
-    likeButton.classList.remove('btn-danger');
-    likeButton.classList.add('btn-outline-danger');
-    icon.classList.replace('bi-heart-fill', 'bi-heart');
-  }
-}
-
-// Event klik tombol Like
-likeButton.addEventListener('click', async () => {
+// 🔥 Like / Unlike Produk
+async function toggleLikeProduct() {
   if (!currentUser) {
     showToast("Silakan login untuk like produk ini!", "warning");
     return;
@@ -225,103 +210,38 @@ likeButton.addEventListener('click', async () => {
   const likeSnap = await getDoc(likeRef);
 
   if (likeSnap.exists()) {
-    // 🔥 Kalau sudah like ➔ Unlike (hapus)
     await deleteDoc(likeRef);
     setLikedUI(false);
     showToast("Produk dihapus dari daftar suka", "warning");
   } else {
-    // 🔥 Kalau belum like ➔ Like (buat doc)
     await setDoc(likeRef, { liked: true });
     setLikedUI(true);
     showToast("Produk ditambahkan ke daftar suka", "success");
   }
-});
+}
 
-// Quantity tombol
-	document.getElementById('increaseQty').addEventListener('click', () => {
-	  let current = parseInt(qtyInput.value);
-	  if (current < importProduct.stock) {
-		animateQuantity(qtyInput, current + 1);
-	  } else {
-		showToast("Stok tidak cukup!", "warning");
-	  }
-	});
+// 🔥 Cek Apakah Produk Sudah Dilike
+async function checkLikedStatus() {
+  if (!currentUser) return;
+  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
+  const likeSnap = await getDoc(likeRef);
+  setLikedUI(likeSnap.exists());
+}
 
-	// Add to Cart
-	// 🔥 Firestore Cart
-async function addToCartFirestore(item) {
-  if (!currentUser) {
-    showToast("Silakan login dulu untuk belanja!", "warning");
-
-    // 🔥 Redirect setelah sedikit delay buat kasih waktu Toast tampil
-    setTimeout(() => {
-      window.location.href = "/userLogin";
-    }, 800); // Delay 0.5 detik biar user lihat warning dulu
-
-    return;
-  }
-
-  try {
-    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
-    const q = query(cartRef, 
-      where("name", "==", item.name),
-      where("color", "==", item.color),
-      where("size", "==", item.size)
-    );
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      // Kalau belum ada, tambahkan baru
-      await addDoc(cartRef, item);
-      showToast("Produk ditambahkan ke keranjang!", "success");
-    } else {
-      // Kalau sudah ada, update quantity
-      for (const docSnap of snapshot.docs) {
-        const existingItem = docSnap.data();
-        await updateDoc(doc(db, `carts/${currentUser.uid}/items/${docSnap.id}`), {
-          quantity: existingItem.quantity + item.quantity
-        });
-        showToast("Jumlah produk di keranjang diperbarui!", "success");
-      }
-    }
-
-    await renderCart(); // 🔥 langsung refresh cart badge setelah semua sukses!
-
-  } catch (error) {
-    console.error(error);
-    showToast("Gagal tambah ke keranjang: " + error.message, "danger");
+// 🔥 Update UI Tombol Like
+function setLikedUI(isLiked) {
+  const likeButton = document.getElementById('likeButton');
+  const icon = likeButton.querySelector('i');
+  likeButton.classList.toggle('btn-danger', isLiked);
+  likeButton.classList.toggle('btn-outline-danger', !isLiked);
+  if (isLiked) {
+    icon.classList.replace('bi-heart', 'bi-heart-fill');
+  } else {
+    icon.classList.replace('bi-heart-fill', 'bi-heart');
   }
 }
-	// 🔥 Tambahkan event ke tombol
-	document.getElementById('addToCartButton').addEventListener('click', async () => {
-	  if (!selectedOptions.color || !selectedOptions.size) {
-		showToast("Pilih warna dan ukuran dulu!", "warning");
-		return;
-	  }
 
-	  const quantity = parseInt(qtyInput.value);
-
-	  const cartItem = {
-		name: importProduct.name,
-		price: importProduct.price,
-		image: importProduct.image,
-		color: selectedOptions.color,
-		size: selectedOptions.size,
-		quantity: quantity
-	  };
-
-	  await addToCartFirestore(cartItem);
-	});
-
-}
-
-// Kalau xenditCart.js butuh fungsi addToCart
-function addToCart(product) {
-  const cart = getCart();
-  cart.push(product);
-  saveCart(cart);
-  renderCart();
-}
-
+// 🚀 Mulai
 loadProduct();
 </script>
+

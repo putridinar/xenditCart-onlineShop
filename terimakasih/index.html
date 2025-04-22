@@ -43,58 +43,113 @@ permalink: /success
     </div>
   </div>
 
-<script>
-function sendTelegramOrder() {
-    const cart = JSON.parse(localStorage.getItem("cart"));
-    const status = localStorage.getItem("orderSent");
-    const loading = document.getElementById('loading');
-    const success = document.getElementById('success');
-    const failed = document.getElementById('failed');
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDocs, collection, doc, getDoc, deleteDoc, getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    if (!cart || cart.length === 0) {
-        window.location.href = "/";  // Jika kosong, balik ke halaman utama
-        return;
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore();
+const auth = getAuth();
+
+async function sendTelegramOrder() {
+  const loading = document.getElementById('loading');
+  const success = document.getElementById('success');
+  const failed = document.getElementById('failed');
+
+  loading.style.display = 'block';
+  success.style.display = 'none';
+  failed.style.display = 'none';
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "/userLogin"; // kalau belum login
+      return;
     }
 
-    if (status === "sent") {
-        loading.style.display = 'none';
-        success.style.display = 'block';
+    try {
+      // 🔥 Ambil data pembeli dari users/{uid}
+      const buyerSnap = await getDoc(doc(db, "users", user.uid));
+      if (!buyerSnap.exists()) {
+        alert("❌ Data user belum lengkap. Silakan isi alamat terlebih dahulu.");
+        window.location.href = "/userProfile";
         return;
-    }
+      }
+      const buyer = buyerSnap.data();
 
-    const chat_id = "1903170022";
-    const token = "5323538027:AAEKFXTpY40G1PKSrFsKzTDVeR4joDsXR9I";
+      // 🔥 Ambil cart items dari carts/{uid}/items
+      const cartRef = collection(db, `carts/${user.uid}/items`);
+      const cartSnap = await getDocs(cartRef);
 
-    let pesan = `🛒 <b>Konfirmasi Pesanan:</b>\n`;
-    cart.forEach((item, index) => {
-        pesan += `\n#${index + 1} ${item.name}\nWarna: ${item.color}\nUkuran: ${item.size}\nQty: ${item.quantity}\nHarga: Rp ${item.price.toLocaleString('id-ID')}\n`;
-    });
+      if (cartSnap.empty) {
+        window.location.href = "/";
+        return;
+      }
 
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(pesan)}&parse_mode=html`;
+      let totalHarga = 0;
+      let pesan = `🛒 <b>Konfirmasi Pesanan Baru</b>\n\n`;
+      pesan += `👤 <b>Nama:</b> ${buyer.name}\n`;
+      pesan += `📞 <b>Telepon:</b> ${buyer.phone}\n`;
+      pesan += `🏠 <b>Alamat:</b> ${buyer.address}\n\n`;
+      pesan += `<b>🛍️ Daftar Produk:</b>\n`;
 
-    fetch(url)
-      .then(res => res.json())
-      .then(response => {
-        loading.style.display = 'none';
-        if (response.ok) {
-            success.style.display = 'block';
-            localStorage.removeItem("cart");
-            localStorage.setItem("orderSent", "sent");
-        } else {
-            failed.style.display = 'block';
-            console.error("❌ Gagal kirim pesan:", response.description);
-        }
-      })
-      .catch(err => {
-        loading.style.display = 'none';
-        failed.style.display = 'block';
-        console.error("❌ Error:", err.message);
+      cartSnap.forEach((docSnap, index) => {
+        const item = docSnap.data();
+        totalHarga += item.price * item.quantity;
+
+        pesan += `\n${index + 1}. <b>${item.name}</b>\nWarna: ${item.color || "-"}\nUkuran: ${item.size || "-"}\nQty: ${item.quantity}\nHarga: Rp ${item.price.toLocaleString('id-ID')}\n`;
       });
+
+      pesan += `\n\n<b>💰 TOTAL: Rp ${totalHarga.toLocaleString('id-ID')}</b>`;
+
+      const chat_id = "1903170022";
+      const token = "5323538027:AAEKFXTpY40G1PKSrFsKzTDVeR4joDsXR9I";
+      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(pesan)}&parse_mode=html`;
+
+      const response = await fetch(url);
+      const result = await response.json();
+
+      loading.style.display = 'none';
+
+      if (result.ok) {
+        success.style.display = 'block';
+        await clearCart(user.uid); // 🔥 Clear cart setelah sukses
+      } else {
+        failed.style.display = 'block';
+        console.error("❌ Gagal kirim ke Telegram:", result.description);
+      }
+
+    } catch (error) {
+      console.error("❌ Error kirim pesanan:", error);
+      loading.style.display = 'none';
+      failed.style.display = 'block';
+    }
+  });
+}
+
+// 🔥 Clear semua cart item setelah order sukses
+async function clearCart(uid) {
+  const cartRef = collection(db, `carts/${uid}/items`);
+  const cartSnap = await getDocs(cartRef);
+  for (const docSnap of cartSnap.docs) {
+    await deleteDoc(docSnap.ref);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", sendTelegramOrder);
 </script>
 
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
