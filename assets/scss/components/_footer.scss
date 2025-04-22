@@ -3,24 +3,62 @@
 @use '../abstracts/mixins' as *;
 
 .footer {
-  width: 100%;
-  background-color: color.adjust($primary-color, $lightness: -10%);
-  color: white;
-  padding: 2rem;
-  text-align: center;
-  font-size: 0.875rem;
+  background-color: $light;
+  color: $dark;
 
-  a {
-    color: $secondary-color;
-    text-decoration: none;
+  h5 {
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
 
-    &:hover {
-      text-decoration: underline;
+  p {
+    font-size: 0.9rem;
+  }
+
+  ul {
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin-bottom: 0.5rem;
+
+      a {
+        color: $dark;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+          color: darken($primary, 10%);
+        }
+      }
     }
   }
 
-  @include mobile {
-    padding: 1.5rem 1rem;
-    font-size: 0.75rem;
+  .input-group {
+    input {
+      border-right: none;
+    }
+    button {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+  }
+
+  .social-icons {
+    margin-top: 1rem;
+
+    a {
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: $primary;
+      }
+    }
+  }
+
+  .border-top {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 }
+

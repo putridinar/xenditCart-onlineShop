@@ -1,7 +1,7 @@
 ---
 layout: none
 Title: Login Admin
-permalink: /login
+permalink: /superadmin
 ---
 <!DOCTYPE html>
 <html lang="id">
@@ -51,22 +51,42 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   const password = document.getElementById('password').value;
   const status = document.getElementById('loginStatus');
 
+  if (!email || !password) {
+    status.textContent = "Mohon isi email dan password!";
+    status.classList.remove('text-success');
+    status.classList.add('text-danger');
+    return;
+  }
+
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Kalau login sukses
     status.textContent = "Login berhasil! Mengarahkan...";
     status.classList.remove('text-danger');
     status.classList.add('text-success');
 
     setTimeout(() => {
-      window.location.href = "/dashboard"; // halaman admin kamu
-    }, 1500);
+      window.location.href = "/dashboard"; // Halaman admin
+    }, 1000);
 
   } catch (error) {
-    status.textContent = "Login gagal: " + error.message;
+    console.error(error.code);
+
+    let message = "Login gagal!";
+    if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
+      message = "Email atau Password salah!";
+    } else if (error.code === "auth/user-not-found") {
+      message = "User tidak ditemukan!";
+    } else if (error.code === "auth/too-many-requests") {
+      message = "Terlalu banyak percobaan login, coba lagi nanti.";
+    }
+
+    status.textContent = message;
+    status.classList.remove('text-success');
     status.classList.add('text-danger');
   }
 });
 </script>
-
 </body>
 </html>

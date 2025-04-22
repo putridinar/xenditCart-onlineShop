@@ -28,6 +28,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// 🔥 Cek login
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "/login";
@@ -36,6 +37,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+// 🔥 Logout tombol
 document.getElementById("logoutBtn").addEventListener("click", () => {
   signOut(auth).then(() => {
     alert("Logout berhasil!");
@@ -43,52 +45,84 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   });
 });
 
+// 🔥 Load semua produk
 async function loadProducts() {
   const listContainer = document.getElementById("productList");
+  listContainer.innerHTML = "<div class='text-center py-3'>Loading produk...</div>"; // 🔥 Tambahkan loading spinner
+
   try {
     const querySnapshot = await getDocs(collection(db, "products"));
+
     if (querySnapshot.empty) {
-      listContainer.innerHTML = "<p>Belum ada produk!</p>";
+      listContainer.innerHTML = "<div class='alert alert-info text-center'>Belum ada produk!</div>";
       return;
     }
 
-    let html = "<ul class='list-group'>";
+    let html = `
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Nama</th>
+              <th>Deskripsi</th>
+              <th>Harga</th>
+              <th>Stok</th>
+              <th>Kategori</th>
+              <th>Warna</th>
+              <th>Ukuran</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
     querySnapshot.forEach(docItem => {
       const p = docItem.data();
       html += `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>${p.name}</strong> <br>
-            Harga: Rp ${p.price.toLocaleString('id-ID')} <br>
-            Kategori: ${p.category}
-          </div>
-          <div>
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.description || '-'}</td>
+          <td>Rp ${p.price.toLocaleString('id-ID')}</td>
+          <td>${p.stock || '-'}</td>
+          <td>${p.category || '-'}</td>
+          <td>${(p.colors || []).join(", ")}</td>
+          <td>${(p.sizes || []).join(", ")}</td>
+          <td>
             <button class="btn btn-sm btn-warning me-2" onclick="editProduct('${docItem.id}')">Edit</button>
             <button class="btn btn-sm btn-danger" onclick="deleteProduct('${docItem.id}')">Hapus</button>
-          </div>
-        </li>
+          </td>
+        </tr>
       `;
     });
-    html += "</ul>";
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
     listContainer.innerHTML = html;
 
   } catch (error) {
-    listContainer.innerHTML = `<p>Gagal memuat produk: ${error.message}</p>`;
+    console.error(error);
+    listContainer.innerHTML = `<div class="alert alert-danger text-center">Gagal memuat produk: ${error.message}</div>`;
   }
 }
 
+// 🔥 Delete produk
 window.deleteProduct = async function(id) {
   if (confirm("Yakin ingin menghapus produk ini?")) {
     try {
       await deleteDoc(doc(db, "products", id));
-      alert("Produk berhasil dihapus.");
+      alert("Produk berhasil dihapus!");
       loadProducts(); // reload list
     } catch (error) {
-      alert("Error hapus produk: " + error.message);
+      alert("Gagal hapus produk: " + error.message);
     }
   }
 }
 
+// 🔥 Edit produk
 window.editProduct = function(id) {
   window.location.href = `/dashboard/edit-product?id=${id}`;
 }

@@ -3,16 +3,22 @@ layout: default
 title: 
 permalink: /product
 ---
-<div id="productDetail" class="product-single text-center">
-  Memuat detail produk...
-</div>
 
+<section class="product-detail py-2">
+  <div class="container">
+    <div id="productDetail" class="row g-3">
+  <span class="text-center">Memuat detail produk...</span>
+    </div>
+  </div>
+</section>
 
-<script src="{{ '/assets/js/xenditCart.js' | relative_url }}"></script>
+<script type="module" src="{{ '/assets/js/xenditCart.js' | relative_url }}"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
@@ -26,10 +32,18 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+let currentUser = null;
+
+// 🔥 Dapatkan user yang sedang login
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+});
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 const container = document.getElementById("productDetail");
+
 let importProduct = null;
 
 async function loadProduct() {
@@ -44,31 +58,55 @@ async function loadProduct() {
 
     if (docSnap.exists()) {
       importProduct = docSnap.data();
-
+      
       let warnaButtons = importProduct.colors?.map(color => `
-        <button type="button" class="btn btn-outline-dark m-1" onclick="selectOption('color', '${color}')">${color}</button>
+        <button type="button" class="btn btn-outline-secondary color-btn" data-color="${color}">${color}</button>
       `).join('') || '';
 
       let ukuranButtons = importProduct.sizes?.map(size => `
-        <button type="button" class="btn btn-outline-dark m-1" onclick="selectOption('size', '${size}')">${size}</button>
+        <button type="button" class="btn btn-outline-secondary size-btn" data-size="${size}">${size}</button>
       `).join('') || '';
 
       container.innerHTML = `
-        <div class="product-single">
-		<div class="single-img">
-          <img class="img-fluid mb-3" src="${importProduct.image}" alt="${importProduct.name}">
-		</div>
-		  <div class="single-detail">
-          <h1>${importProduct.name}</h1>
-          <p class="product-price">Rp ${importProduct.price.toLocaleString('id-ID')}</p>
-          <p>Kategori: ${importProduct.category}</p>
-        <div><strong>Pilih Warna:</strong><br>${warnaButtons}</div>
-        <div class="mt-2"><strong>Pilih Ukuran:</strong><br>${ukuranButtons}</div>
-        <button class="btn btn-primary mt-4" onclick="addToCartSingle()">Tambah ke Keranjang</button>
-		  </div>
-        </div>
-      `;
+      <div class="col-md-6">
+        <img class="img-fluid rounded shadow-sm" src="${importProduct.image}" alt="${importProduct.name}" style="width:100vw;">
+      </div>
 
+      <div class="col-md-6">
+        <h2 class="mb-3">${importProduct.name}</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="h4 mb-0 me-2 text-primary">Rp ${importProduct.price.toLocaleString('id-ID')}</span>
+          <button class="btn btn-outline-danger btn-like" id="likeButton">
+            <i class="bi bi-heart"></i> <span>Like</span>
+          </button>
+        </div>
+        <p class="text-muted mb-4">${importProduct.description || ''}</p>
+
+        <div class="mb-4">
+          <h6 class="mb-2">Pilih Warna:</h6>
+          <div class="d-flex flex-wrap gap-2" id="colorOptions">${warnaButtons}</div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="mb-2">Pilih Ukuran:</h6>
+          <div class="d-flex flex-wrap gap-2" id="sizeOptions">${ukuranButtons}</div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="mb-2">Jumlah:</h6>
+          <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary" id="decreaseQty">-</button>
+            <input type="text" id="quantityInput" class="form-control text-center mx-2" value="1" style="width: 60px;" readonly>
+            <button class="btn btn-outline-secondary" id="increaseQty">+</button>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2">
+          <button class="btn btn-primary btn-lg" id="addToCartButton">Tambah ke Keranjang</button>
+        </div>
+      </div>`;
+
+      setupInteractions();
     } else {
       container.innerHTML = "<p>Produk tidak ditemukan.</p>";
     }
@@ -77,38 +115,212 @@ async function loadProduct() {
   }
 }
 
-window.selectedOptions = {};
+let selectedOptions = {
+  color: null,
+  size: null,
+};
 
-window.selectOption = function(type, value) {
-  window.selectedOptions[type] = value;
-  alert(`${type.toUpperCase()} dipilih: ${value}`);
+function setupInteractions() {
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedOptions.color = btn.getAttribute('data-color');
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedOptions.size = btn.getAttribute('data-size');
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  
+let quantityInterval = null; // 🔥 Simpan global
+
+function animateQuantity(input, newValue) {
+  if (quantityInterval) {
+    clearInterval(quantityInterval); // 🔥 Bersihkan interval lama dulu
+  }
+
+  const currentVal = parseInt(input.value);
+  const diff = newValue - currentVal;
+  if (diff === 0) return;
+
+  let step = diff > 0 ? 1 : -1;
+
+  quantityInterval = setInterval(() => {
+    let current = parseInt(input.value);
+    input.value = current + step;
+
+    if (parseInt(input.value) === newValue) {
+      clearInterval(quantityInterval); // Clear interval setelah selesai
+      quantityInterval = null; // Reset
+    }
+  }, 50);
 }
 
-window.addToCartSingle = function() {
-  if (!importProduct) {
-    alert("Produk belum termuat.");
-    return;
-  }
-  if (!window.selectedOptions.color || !window.selectedOptions.size) {
-    alert("Pilih WARNA dan UKURAN dulu!");
-    return;
-  }
+const qtyInput = document.getElementById('quantityInput');
 
-function addToCart(importProduct) {
-  cart.push(importProduct);
-  localStorage.setItem('cart', JSON.stringify(cart));
-  alert(`Produk "${importProduct.name}" berhasil ditambahkan ke keranjang!`);
-}
-
-addToCart({
-  name: importProduct.name,
-  price: importProduct.price,
-  image: importProduct.image,
-  color: window.selectedOptions.color,
-  size: window.selectedOptions.size,
-  quantity: 1
+document.getElementById('increaseQty').addEventListener('click', () => {
+  let current = parseInt(qtyInput.value);
+  animateQuantity(qtyInput, current + 1);
 });
 
+document.getElementById('decreaseQty').addEventListener('click', () => {
+  let current = parseInt(qtyInput.value);
+  if (current > 1) animateQuantity(qtyInput, current - 1);
+});
+
+
+  // Like button
+// Variabel global
+let currentUser = null;
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  if (user) {
+    checkLikedStatus(); // 🔥 Cek status like pas login
+  }
+});
+
+const likeButton = document.getElementById('likeButton');
+
+// Fungsi cek apakah user sudah like produk ini
+async function checkLikedStatus() {
+  if (!currentUser) return;
+  
+  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
+  const likeSnap = await getDoc(likeRef);
+
+  if (likeSnap.exists()) {
+    setLikedUI(true);
+  } else {
+    setLikedUI(false);
+  }
+}
+
+// Fungsi ubah tampilan tombol Like
+function setLikedUI(isLiked) {
+  const icon = likeButton.querySelector('i');
+  if (isLiked) {
+    likeButton.classList.add('btn-danger');
+    likeButton.classList.remove('btn-outline-danger');
+    icon.classList.replace('bi-heart', 'bi-heart-fill');
+  } else {
+    likeButton.classList.remove('btn-danger');
+    likeButton.classList.add('btn-outline-danger');
+    icon.classList.replace('bi-heart-fill', 'bi-heart');
+  }
+}
+
+// Event klik tombol Like
+likeButton.addEventListener('click', async () => {
+  if (!currentUser) {
+    showToast("Silakan login untuk like produk ini!", "warning");
+    return;
+  }
+
+  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
+  const likeSnap = await getDoc(likeRef);
+
+  if (likeSnap.exists()) {
+    // 🔥 Kalau sudah like ➔ Unlike (hapus)
+    await deleteDoc(likeRef);
+    setLikedUI(false);
+    showToast("Produk dihapus dari daftar suka", "warning");
+  } else {
+    // 🔥 Kalau belum like ➔ Like (buat doc)
+    await setDoc(likeRef, { liked: true });
+    setLikedUI(true);
+    showToast("Produk ditambahkan ke daftar suka", "success");
+  }
+});
+
+// Quantity tombol
+	document.getElementById('increaseQty').addEventListener('click', () => {
+	  let current = parseInt(qtyInput.value);
+	  if (current < importProduct.stock) {
+		animateQuantity(qtyInput, current + 1);
+	  } else {
+		showToast("Stok tidak cukup!", "warning");
+	  }
+	});
+
+	// Add to Cart
+	// 🔥 Firestore Cart
+async function addToCartFirestore(item) {
+  if (!currentUser) {
+    showToast("Silakan login dulu untuk belanja!", "warning");
+
+    // 🔥 Redirect setelah sedikit delay buat kasih waktu Toast tampil
+    setTimeout(() => {
+      window.location.href = "/userLogin";
+    }, 800); // Delay 0.5 detik biar user lihat warning dulu
+
+    return;
+  }
+
+  try {
+    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
+    const q = query(cartRef, 
+      where("name", "==", item.name),
+      where("color", "==", item.color),
+      where("size", "==", item.size)
+    );
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      // Kalau belum ada, tambahkan baru
+      await addDoc(cartRef, item);
+      showToast("Produk ditambahkan ke keranjang!", "success");
+    } else {
+      // Kalau sudah ada, update quantity
+      for (const docSnap of snapshot.docs) {
+        const existingItem = docSnap.data();
+        await updateDoc(doc(db, `carts/${currentUser.uid}/items/${docSnap.id}`), {
+          quantity: existingItem.quantity + item.quantity
+        });
+        showToast("Jumlah produk di keranjang diperbarui!", "success");
+      }
+    }
+
+    await renderCart(); // 🔥 langsung refresh cart badge setelah semua sukses!
+
+  } catch (error) {
+    console.error(error);
+    showToast("Gagal tambah ke keranjang: " + error.message, "danger");
+  }
+}
+	// 🔥 Tambahkan event ke tombol
+	document.getElementById('addToCartButton').addEventListener('click', async () => {
+	  if (!selectedOptions.color || !selectedOptions.size) {
+		showToast("Pilih warna dan ukuran dulu!", "warning");
+		return;
+	  }
+
+	  const quantity = parseInt(qtyInput.value);
+
+	  const cartItem = {
+		name: importProduct.name,
+		price: importProduct.price,
+		image: importProduct.image,
+		color: selectedOptions.color,
+		size: selectedOptions.size,
+		quantity: quantity
+	  };
+
+	  await addToCartFirestore(cartItem);
+	});
+
+}
+
+// Kalau xenditCart.js butuh fungsi addToCart
+function addToCart(product) {
+  const cart = getCart();
+  cart.push(product);
+  saveCart(cart);
+  renderCart();
 }
 
 loadProduct();

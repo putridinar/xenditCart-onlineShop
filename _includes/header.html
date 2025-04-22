@@ -1,31 +1,219 @@
-<header>
-  <div class="collapse bg-dark" id="navbarHeader">
-    <div class="container">
-      <div class="row">
-        <div class="col-sm-8 col-md-7 py-4">
-          <h4 class="text-white">About</h4>
-          <p class="text-muted">Add some information about the album below, the author, or any other background context. Make it a few sentences long so folks can pick up some informative tidbits. Then, link them off to some social networking sites or contact information.</p>
-        </div>
-        <div class="col-sm-4 offset-md-1 py-4">
-          <h4 class="text-white">Contact</h4>
-          <ul class="list-unstyled">
-            <li><a href="#" class="text-white">Follow on Twitter</a></li>
-            <li><a href="#" class="text-white">Like on Facebook</a></li>
-            <li><a href="#" class="text-white">Email me</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="navbar navbar-dark bg-dark shadow-sm">
-    <div class="container">
-      <a href="{{site.baseurl}}/" class="navbar-brand d-flex align-items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true" class="me-2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <strong>Album</strong>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader" aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    </div>
-  </div>
+<header class="header bg-white shadow-sm mb-4">
+	<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+	  <div class="container">
+		<a class="navbar-brand fw-bold" href="{{ site.baseurl }}/">{{ site.title }}</a>
+		
+<!-- Tambahan di Navbar -->
+<div class="dropdown ms-3" id="dropProfile" style="display:none;">
+  <button class="btn btn-light border-0 p-0" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+    <img id="profilePic" src="/default-avatar.png" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover; border:2px solid #ccc;">
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">Profile Saya</button></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
+  </ul>
+</div>
+
+		<div class="absolutemee">
+		<button class="btn btn-outline-dark d-lg-none me-2 position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" aria-controls="cartCanvas">
+		  <i class="bi bi-cart"></i>
+		  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCountMobile">0</span>
+		</button>
+		<!-- Hamburger toggle -->
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border:0;">
+		  <span class="navbar-toggler-icon"></span>
+		</button>
+		</div>
+
+		<div class="collapse navbar-collapse" id="navbarNav">
+		  <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+			<li class="nav-item">
+			  <a class="nav-link active" aria-current="page" href="/">Beranda</a>
+			</li>
+			<li class="nav-item">
+			  <a class="nav-link" href="/allProduk">Produk</a>
+			</li>
+			<li class="nav-item">
+			  <a class="nav-link" href="/promo">Promo</a>
+			</li>
+			<li class="nav-item">
+			  <a class="nav-link" href="/getContact">Kontak</a>
+			</li>
+		  </ul>
+
+		  <!-- Cart button for desktop -->
+		  <button class="btn btn-outline-dark d-none d-lg-inline-block position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" aria-controls="cartCanvas">
+			<i class="bi bi-cart"></i>
+			<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCountDesktop">0</span>
+		  </button>
+		</div>
+	  </div>
+	</nav>
 </header>
+<style>
+@keyframes shake {
+  0% { transform: translate(0px, 0px) rotate(0deg); }
+  20% { transform: translate(-2px, 2px) rotate(-2deg); }
+  40% { transform: translate(-2px, -2px) rotate(2deg); }
+  60% { transform: translate(2px, 2px) rotate(-2deg); }
+  80% { transform: translate(2px, -2px) rotate(2deg); }
+  100% { transform: translate(0px, 0px) rotate(0deg); }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+</style>
+<!-- Offcanvas Keranjang -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartCanvas" aria-labelledby="cartOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="cartOffcanvasLabel">Keranjang Belanja</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <div id="cartItems" class="flex-grow-1 overflow-auto">
+      <!-- List produk akan muncul disini -->
+    </div>
+	<div class="mt-3" id="checkoutSection" style="display:none;">
+	  <h5 class="d-flex justify-content-between">
+		<span>Total:</span>
+		<span id="cartTotal">Rp 0</span>
+	  </h5>
+	  <button class="btn btn-primary w-100 mt-3" onclick="checkoutCart()">Checkout</button>
+	</div>
+  </div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const logoutBtn = document.getElementById('logoutBtn');
+const dropProfile = document.getElementById('dropProfile');
+
+logoutBtn.addEventListener('click', () => {
+  signOut(auth)
+    .then(() => {
+      alert("Logout berhasil! 👋");
+      window.location.href = "/";
+    })
+    .catch((error) => {
+      console.error(error);
+      alert("❌ Gagal logout: " + error.message);
+    });
+});
+
+let currentUser = null;
+
+// 🔥 Cek user login
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    checkoutSection.style.display = 'block'; // 🔥 TAMPILKAN
+    dropProfile.style.display = "inline-block";
+    renderCart();
+  } else {
+    currentUser = null;
+    checkoutSection.style.display = 'none'; // 🔥 SEMBUNYIKAN
+    dropProfile.style.display = "none";
+  }
+});
+
+async function renderCart() {
+  const cartItems = document.getElementById('cartItems');
+  const cartCount = document.getElementById('cartCount');
+  const cartTotal = document.getElementById('cartTotal');
+
+  if (!currentUser) {
+    cartItems.innerHTML = `<p class="text-center text-muted">Silakan login untuk melihat keranjang.</p>`;
+    cartCount.innerText = "0"; // 🔥 RESET
+    cartTotal.innerText = "Rp 0";
+    return;
+  }
+
+  cartItems.innerHTML = `<div class="text-center py-3">Loading keranjang...</div>`;
+
+  try {
+    const q = collection(db, `carts/${currentUser.uid}/items`);
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      cartItems.innerHTML = `<p class="text-center text-muted">Keranjang kosong.</p>`;
+      cartCount.innerText = "0"; // 🔥 TAMPIL 0
+      cartTotal.innerText = "Rp 0";
+      return;
+    }
+
+    let totalPrice = 0;
+    cartItems.innerHTML = "";
+
+    snapshot.forEach(docSnap => {
+      const item = docSnap.data();
+      totalPrice += item.price * item.quantity;
+
+      cartItems.innerHTML += `
+        <div class="d-flex mb-3 border-bottom pb-2">
+          <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover;" class="rounded me-3">
+          <div class="flex-grow-1">
+            <h6 class="mb-1">${item.name}</h6>
+            <small class="text-muted">Warna: ${item.color} | Ukuran: ${item.size}</small><br>
+            <small class="text-muted">Jumlah: ${item.quantity}</small><br>
+            <strong>Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</strong>
+          </div>
+          <button class="btn btn-sm btn-outline-danger ms-2" onclick="removeCartItem('${docSnap.id}')" style="height:fit-content;">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      `;
+    });
+
+    cartCount.innerText = snapshot.size; // 🔥 SET jumlah item di badge
+	// 🔥 Animasi Shake
+	cartCount.classList.remove('shake'); // Reset dulu
+	void cartCount.offsetWidth; // FORCE Reflow supaya animasi bisa diulang
+	cartCount.classList.add('shake'); // Kasih class shake
+    cartTotal.innerText = "Rp " + totalPrice.toLocaleString('id-ID');
+
+  } catch (error) {
+    console.error(error);
+    cartItems.innerHTML = `<p class="text-danger text-center">Gagal memuat keranjang.</p>`;
+  }
+}
+
+
+window.removeCartItem = async function(itemId) {
+  if (!currentUser) return;
+
+  try {
+    await deleteDoc(doc(db, `carts/${currentUser.uid}/items/${itemId}`));
+    showToast("Item dihapus dari keranjang", "warning");
+    renderCart();
+  } catch (error) {
+    console.error(error);
+    showToast("Gagal hapus item", "danger");
+  }
+}
+
+// 🔥 Saat buka cart offcanvas, auto refresh isi keranjang
+const cartOffcanvas = document.getElementById('cartCanvas');
+if (cartOffcanvas) {
+  cartOffcanvas.addEventListener('show.bs.offcanvas', function () {
+    renderCart();
+  });
+}
+</script>
