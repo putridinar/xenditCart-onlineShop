@@ -166,9 +166,11 @@ form.addEventListener('submit', async (e) => {
       totalAmount += item.price * item.quantity;
     });
 
+const externalId = "INV-" + new Date().toISOString();
+
     // 🔥 SIMPAN ORDER KE FIRESTORE
     const orderData = {
-      externalId: INV-new Date().toISOString(),
+      externalId,
       userId: currentUser.uid,
       firstName,
       lastName,
