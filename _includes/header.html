@@ -32,7 +32,7 @@
 			  <a class="nav-link active" aria-current="page" href="/">Beranda</a>
 			</li>
 			<li class="nav-item">
-			  <a class="nav-link" href="/allProduk">Produk</a>
+			  <a class="nav-link" href="/allProduct">Produk</a>
 			</li>
 			<li class="nav-item">
 			  <a class="nav-link" href="/promo">Promo</a>
@@ -80,7 +80,7 @@
 		<span>Total:</span>
 		<span id="cartTotal">Rp 0</span>
 	  </h5>
-	  <button class="btn btn-primary w-100 mt-3" onclick="checkoutCart()">Checkout</button>
+	  <button class="btn btn-primary w-100 mt-3" onclick="goCheckout()">Checkout</button>
 	</div>
   </div>
 </div>
@@ -151,6 +151,7 @@ async function renderCart() {
   const cartCountMobile = document.getElementById('cartCountMobile');
   const cartCountDesktop = document.getElementById('cartCountDesktop');
   const cartTotalEl = document.getElementById('cartTotal');
+  const checkoutSection = document.getElementById('checkoutSection');
 
   try {
     const cartRef = collection(db, `carts/${currentUser.uid}/items`);
@@ -184,13 +185,26 @@ async function renderCart() {
       `;
     });
 
+    // 🛒 Render ke DOM
     cartItemsEl.innerHTML = snapshot.empty
       ? `<p class="text-center text-muted">Keranjang kosong.</p>`
       : cartHTML;
 
+    // 🔥 Update Cart Counter
     if (cartCountMobile) cartCountMobile.innerText = totalItems;
     if (cartCountDesktop) cartCountDesktop.innerText = totalItems;
+
+    // 🔥 Update Cart Total
     if (cartTotalEl) cartTotalEl.innerText = "Rp " + totalPrice.toLocaleString('id-ID');
+
+    // 🔥 Tampilkan / Sembunyikan Checkout Section
+    if (checkoutSection) {
+      if (snapshot.empty) {
+        checkoutSection.style.display = "none";
+      } else {
+        checkoutSection.style.display = "block";
+      }
+    }
 
   } catch (error) {
     console.error('Error load cart:', error);
@@ -218,6 +232,11 @@ if (cartOffcanvas) {
   cartOffcanvas.addEventListener('show.bs.offcanvas', function () {
     renderCart();
   });
+}
+</script>
+<script>
+function goCheckout() {
+  window.location.href = "/checkout";
 }
 </script>
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">

@@ -1,34 +1,18 @@
 <!DOCTYPE html>
 <html lang="{{ site.lang | default: page.lang | default: 'ID-id' }}">
-  <head>
-    <title>{% if page.title %}{{ page.title }} – {% endif %}{{ site.name }} – {{ site.description }}</title>
-
-    {% include meta.html %}
-
-    <!--[if lt IE 9]>
-      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <link rel="stylesheet" type="text/css" href="{{ '/assets/css/style.css' | relative_url }}" />
-    <link rel="alternate" type="application/rss+xml" title="{{ site.name }} - {{ site.description }}" href="{{ '/feed.xml' | relative_url }}" />
-	<link rel="stylesheet" href="{{ '/assets/frameworks/bootstrap/dist/css/bootstrap.min.css' | relative_url }}">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Created with Jekyll -->
-  </head>
-  <body>
+{% include head.html %}
+<body>
 {% include header.html %}
-		{% if page.url == '/' %}
+{% if page.url == '/' %}
 {% include hero.html %}
-		{% endif %}
-
-    <div id="main" role="main" class="container">
-      {{ content }}
-    </div>
-
+{% endif %}
+<div id="main" role="main" class="container">
+{{ content }}
+</div>
 {% include edit-modal.html %}
-    {% include toast.html %}
+{% include toast.html %}
 {% include footer.html %}
-    {% include analytics.html %}
-	<script src="{{ '/assets/frameworks/bootstrap/dist/js/bootstrap.bundle.min.js' | relative_url }}"></script>
-  </body>
+{% include analytics.html %}
+<script src="{{ '/assets/frameworks/bootstrap/dist/js/bootstrap.bundle.min.js' | relative_url }}"></script>
+</body>
 </html>

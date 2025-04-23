@@ -49,6 +49,13 @@ jekyll-archives:
     categories: '/category/:name/'
     tags: '/tag/:name/'
     
+# HTML Compression
+# - http://jch.penibelst.de/
+compress_html:
+  clippings: all
+  ignore:
+    envs: development
+    
 exclude:
     - Gemfile
     - Gemfile.lock

@@ -86,6 +86,12 @@ function renderProductDetail(product) {
           <i class="bi bi-heart"></i> <span>Like</span>
         </button>
       </div>
+		<div id="ratingForm" class="d-flex gap-1 my-3">
+		  ${[1,2,3,4,5].map(num => `
+			<i class="bi bi-star text-muted fs-3 star-rate" data-star="${num}" style="cursor:pointer;"></i>
+		  `).join('')}
+		</div>
+		<p id="ratingMessage" class="text-success mt-2"></p>
       <p class="text-muted">${product.description || ''}</p>
       <div class="mb-4"><h6>Pilih Warna:</h6><div id="colorOptions" class="d-flex gap-2">${warnaButtons}</div></div>
       <div class="mb-4"><h6>Pilih Ukuran:</h6><div id="sizeOptions" class="d-flex gap-2">${ukuranButtons}</div></div>
@@ -154,6 +160,34 @@ function setupInteractions() {
 
   const likeButton = document.getElementById('likeButton');
   likeButton.addEventListener('click', toggleLikeProduct);
+}
+
+document.querySelectorAll('.star-rate').forEach(star => {
+  star.addEventListener('click', async () => {
+    const ratingValue = parseInt(star.getAttribute('data-star'));
+    const productRef = doc(db, "products", id);
+    const productSnap = await getDoc(productRef);
+
+    if (productSnap.exists()) {
+      const data = productSnap.data();
+      const newTotal = (data.ratingTotal || 0) + ratingValue;
+      const newCount = (data.ratingCount || 0) + 1;
+
+      await updateDoc(productRef, {
+        ratingTotal: newTotal,
+        ratingCount: newCount
+      });
+
+      document.getElementById('ratingMessage').innerText = "✅ Terima kasih atas rating Anda!";
+      document.getElementById('ratingForm').style.pointerEvents = "none";
+    }
+  });
+});
+
+const voted = localStorage.getItem(`voted-${id}`);
+if (voted) {
+  document.getElementById('ratingForm').style.pointerEvents = "none";
+  document.getElementById('ratingMessage').innerText = "✅ Anda sudah memberikan rating.";
 }
 
 // 🔥 Animasi Quantity

@@ -1,0 +1,216 @@
+---
+layout: default
+title: Semua Produk
+permalink: /allProduct
+---
+
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Semua Produk</h2>
+
+      <div class="d-none d-md-block">
+        <button class="btn btn-primary">Tambah Produk</button>
+      </div>
+    </div>
+
+    <!-- 🔥 Search & Filter -->
+    <div class="row mb-4">
+      <div class="col-12 col-md-6 mb-2">
+        <input type="text" class="form-control" id="searchInput" placeholder="Cari produk...">
+      </div>
+      <div class="col-6 col-md-3 mb-2">
+        <select class="form-select" id="filterCategory">
+          <option value="">Semua Kategori</option>
+          <option value="Baju">Baju</option>
+          <option value="Celana">Celana</option>
+          <option value="Sepatu">Sepatu</option>
+          <option value="Aksesoris">Aksesoris</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3 mb-2">
+        <select class="form-select" id="sortPrice">
+          <option value="">Urutkan Harga</option>
+          <option value="asc">Harga Termurah</option>
+          <option value="desc">Harga Termahal</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 🔥 Produk -->
+    <div class="row g-4" id="productsGrid">
+      <!-- Produk muncul disini -->
+    </div>
+
+    <div class="text-center my-4 d-none" id="loadingSpinner">
+      <div class="spinner-border text-primary"></div>
+    </div>
+
+    <div class="text-center mt-4 d-none" id="noMoreProducts">
+      <p class="text-muted">Semua produk sudah ditampilkan.</p>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const productsGrid = document.getElementById("productsGrid");
+const searchInput = document.getElementById("searchInput");
+const filterCategory = document.getElementById("filterCategory");
+const sortPrice = document.getElementById("sortPrice");
+const loadingSpinner = document.getElementById("loadingSpinner");
+const noMoreProducts = document.getElementById("noMoreProducts");
+
+let allProducts = [];
+let filteredProducts = [];
+let page = 1;
+const pageSize = 10;
+let lastVisible = null;
+let isLoading = false;
+
+// Load semua produk
+async function loadProducts() {
+  const snapshot = await getDocs(collection(db, "products"));
+  allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  filteredProducts = [...allProducts];
+  renderProducts();
+}
+
+// Render produk
+function renderProducts(initial = true) {
+  const start = (page - 1) * pageSize;
+  const end = page * pageSize;
+  const productsToShow = filteredProducts.slice(0, end);
+
+  if (initial) productsGrid.innerHTML = "";
+
+  productsToShow.forEach(product => {
+    if (!document.getElementById(`product-${product.id}`)) {
+      productsGrid.innerHTML += `
+      <div class="col-6 col-md-4" id="product-${product.id}">
+        <div class="card h-100 shadow-sm border-0 hover-scale">
+          <div class="position-absolute top-0 start-0 badge bg-danger m-2">${product.isNew ? 'Baru' : (product.discount ? 'Diskon' : '')}</div>
+          <img src="${product.image}" class="card-img-top" alt="${product.name}" style="height: 180px; object-fit: cover;">
+          <div class="card-body text-center d-flex flex-column">
+		  <div class="rating-stars text-warning small mb-2" data-id="${product.id}">
+			  ${generateStars(product)}
+			</div>
+            <h5 class="card-title">${product.name}</h5>
+            <p class="card-text text-primary fw-bold">Rp ${product.price.toLocaleString('id-ID')}</p>
+            <a href="/product?id=${product.id}" class="btn btn-outline-primary mt-auto d-none d-md-block">Lihat Produk</a>
+            <a href="/product?id=${product.id}" class="stretched-link d-md-none"></a>
+          </div>
+        </div>
+      </div>
+      `;
+    }
+  });
+
+  if (end >= filteredProducts.length) {
+    noMoreProducts.classList.remove("d-none");
+  } else {
+    noMoreProducts.classList.add("d-none");
+  }
+}
+
+// Infinite Scroll
+window.addEventListener("scroll", () => {
+  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+    if (!isLoading && page * pageSize < filteredProducts.length) {
+      page++;
+      isLoading = true;
+      loadingSpinner.classList.remove("d-none");
+      setTimeout(() => {
+        renderProducts(false);
+        loadingSpinner.classList.add("d-none");
+        isLoading = false;
+      }, 1000);
+    }
+  }
+});
+
+// Search Produk
+searchInput.addEventListener("input", () => {
+  const keyword = searchInput.value.toLowerCase();
+  filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(keyword));
+  page = 1;
+  renderProducts();
+});
+
+// Filter Kategori
+filterCategory.addEventListener("change", () => {
+  applyFilterAndSort();
+});
+
+// Sort Harga
+sortPrice.addEventListener("change", () => {
+  applyFilterAndSort();
+});
+
+function applyFilterAndSort() {
+  const category = filterCategory.value;
+  const sort = sortPrice.value;
+
+  filteredProducts = [...allProducts];
+
+  if (category) {
+    filteredProducts = filteredProducts.filter(p => p.category === category);
+  }
+
+  if (sort === "asc") {
+    filteredProducts.sort((a, b) => a.price - b.price);
+  } else if (sort === "desc") {
+    filteredProducts.sort((a, b) => b.price - a.price);
+  }
+
+  page = 1;
+  renderProducts();
+}
+
+function generateStars(product) {
+  if (!product.ratingTotal || !product.ratingCount) return "Belum ada rating";
+
+  const avg = product.ratingTotal / product.ratingCount;
+  let starsHtml = "";
+
+  for (let i = 1; i <= 5; i++) {
+    if (i <= Math.floor(avg)) {
+      starsHtml += `<i class="bi bi-star-fill"></i> `;
+    } else if (i - avg < 1) {
+      starsHtml += `<i class="bi bi-star-half"></i> `;
+    } else {
+      starsHtml += `<i class="bi bi-star"></i> `;
+    }
+  }
+  return starsHtml;
+}
+
+// Mulai Load
+document.addEventListener("DOMContentLoaded", loadProducts);
+</script>
+
+<!-- 🔥 Hover Scale CSS -->
+<style>
+.hover-scale {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-scale:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+</style>

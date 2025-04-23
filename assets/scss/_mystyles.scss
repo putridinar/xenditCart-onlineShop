@@ -4,6 +4,19 @@
 @use 'components/grid-product';
 @use 'components/product';
 
+.mobile_hide {
+	display: block;
+	@include mobile {
+		display: none !important;
+		}
+}
+
+.mobile_show {
+	display: none !important;
+	@include mobile {
+		display: block;
+		}
+}
 .row-space {
     display: flex;
     align-items: center;

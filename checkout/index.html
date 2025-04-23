@@ -1,0 +1,198 @@
+---
+layout: default
+title: Checkout Form
+permalink: /checkout
+---
+
+<section class="container py-5">
+  <h2 class="mb-4">Checkout</h2>
+
+  <form id="checkoutForm" class="card p-4 shadow-sm">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Nama Depan</label>
+        <input type="text" id="firstName" class="form-control" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Nama Belakang</label>
+        <input type="text" id="lastName" class="form-control" required>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Nomor WhatsApp</label>
+        <input type="tel" id="phone" class="form-control" required>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" id="email" class="form-control" readonly disabled>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Jenis Pengiriman</label>
+        <select id="shippingType" class="form-select" required>
+          <option value="">-- Pilih --</option>
+          <option value="J&T">J&T</option>
+          <option value="JNE">JNE</option>
+          <option value="Grab">Grab</option>
+          <option value="Gojek">Gojek</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <h5 class="mt-4">Alamat Lengkap</h5>
+      </div>
+
+      <div class="col-12 mb-3">
+        <label class="form-label">Jalan</label>
+        <input type="text" id="street" class="form-control" required>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Kota</label>
+        <input type="text" id="city" class="form-control" required>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Kode Pos</label>
+        <input type="text" id="postalCode" class="form-control" required>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Provinsi</label>
+        <input type="text" id="province" class="form-control" required>
+      </div>
+
+      <div class="col-12 mb-3">
+        <label class="form-label">Negara</label>
+        <input type="text" id="country" class="form-control" value="Indonesia" required>
+      </div>
+
+    </div>
+
+    <div id="statusMessage" class="text-center mt-3"></div>
+
+    <button type="submit" class="btn btn-primary w-100 mt-4">Checkout</button>
+  </form>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let currentUser = null;
+
+// 🔥 Pas login, langsung set email di field readonly
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('email').value = user.email || "";
+  } else {
+    alert("Silakan login terlebih dahulu.");
+    window.location.href = "/userLogin";
+  }
+});
+
+const form = document.getElementById('checkoutForm');
+const statusMsg = document.getElementById('statusMessage');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const shippingType = document.getElementById('shippingType').value;
+  
+  // 🔥 Alamat dalam object nested
+  const address = {
+    street: document.getElementById('street').value.trim(),
+    city: document.getElementById('city').value.trim(),
+    postalCode: document.getElementById('postalCode').value.trim(),
+    province: document.getElementById('province').value.trim(),
+    country: document.getElementById('country').value.trim()
+  };
+
+  if (!currentUser) {
+    alert("Silakan login terlebih dahulu.");
+    return;
+  }
+
+  try {
+    await setDoc(doc(db, "users", currentUser.uid), {
+      firstName,
+      lastName,
+      phone,
+      email,
+      shippingType,
+      address,
+      updatedAt: new Date()
+    });
+
+    // 🔥 Ambil Cart User
+    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
+    const cartSnap = await getDocs(cartRef);
+
+    if (cartSnap.empty) {
+      alert("Keranjang kosong, tidak bisa checkout.");
+      return;
+    }
+
+    // 🔥 Proses Cart untuk Xendit
+    let items = [];
+    let totalAmount = 0;
+
+    cartSnap.forEach(docItem => {
+      const item = docItem.data();
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      });
+      totalAmount += item.price * item.quantity;
+    });
+
+    // 🔥 Kirim ke server Xendit Worker (contoh endpoint lu)
+    const response = await fetch('https://xendit-app.putridinar.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        buyerName: `${firstName} ${lastName}`,
+        buyerEmail: email,
+        buyerPhone: phone,
+        amount: totalAmount,
+        items: items
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.invoice_url) {
+      // 🔥 Langsung Redirect ke Invoice Xendit
+      window.location.href = result.invoice_url;
+    } else {
+      throw new Error(result.message || "Gagal membuat invoice.");
+    }
+    
+  } catch (error) {
+    console.error("Checkout Error:", error);
+    alert("❌ Gagal checkout: " + error.message);
+  }
+});
+</script>
