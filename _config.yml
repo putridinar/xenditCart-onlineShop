@@ -36,10 +36,28 @@ sass:
   style: :compressed 
 
 plugins:
+  - jekyll-dotenv
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-archives
   - jekyll-paginate
+
+# Xendit Defaults
+xendit_options:
+  - test
+  - live
+
+XENDIT_LIVE_URL: "<%= ENV['live_url'] %>"
+XENDIT_TEST_URL: "<%= ENV['test_url'] %>"
+
+# Firebase
+api_key: "<%= ENV['api_key'] %>"
+auth_domain: "<%= ENV['auth_domain'] %>"
+project_id: "<%= ENV['project_id'] %>"
+storage_bucket: "<%= ENV['storage_bucket'] %>"
+sender_id: "<%= ENV['sender_id'] %>"
+app_id: "<%= ENV['app_id'] %>"
+measure_id: "<%= ENV['measure_id'] %>"
 
 jekyll-archives:
   enabled:

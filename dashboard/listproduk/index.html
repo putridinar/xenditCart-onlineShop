@@ -15,13 +15,13 @@ import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/fi
 import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.env.api_key}}",
+    authDomain: "{{site.env.auth_domain}}",
+    projectId: "{{site.env.project_id}}",
+    storageBucket: "{{site.env.storage_bucket}}",
+    messagingSenderId: "{{site.env.sender_id}}",
+    appId: "{{site.env.app_id}}",
+    measurementId: "{{site.env.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -40,7 +40,7 @@ onAuthStateChanged(auth, (user) => {
 // 🔥 Logout tombol
 document.getElementById("logoutBtn").addEventListener("click", () => {
   signOut(auth).then(() => {
-    alert("Logout berhasil!");
+    showGlobalAlert("Logout berhasil!");
     window.location.href = "/login";
   });
 });
@@ -114,10 +114,10 @@ window.deleteProduct = async function(id) {
   if (confirm("Yakin ingin menghapus produk ini?")) {
     try {
       await deleteDoc(doc(db, "products", id));
-      alert("Produk berhasil dihapus!");
+      showGlobalAlert("Produk berhasil dihapus!");
       loadProducts(); // reload list
     } catch (error) {
-      alert("Gagal hapus produk: " + error.message);
+      showGlobalAlert("Gagal hapus produk: " + error.message);
     }
   }
 }

@@ -34,13 +34,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.api_key}}",
+    authDomain: "{{site.auth_domain}}",
+    projectId: "{{site.project_id}}",
+    storageBucket: "{{site.storage_bucket}}",
+    messagingSenderId: "{{site.sender_id}}",
+    appId: "{{site.app_id}}",
+    measurementId: "{{site.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);

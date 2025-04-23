@@ -1,5 +1,6 @@
 <div class="container my-5">
     <div class="row p-4 pb-0 pe-lg-0 pt-lg-5 align-items-center rounded-3 border shadow-lg overflow-hidden">
+		<span>{% if layout.xendit_options == "live" %}{% elsif layout.xendit_options == "test" %}<span class="badge bg-warning rounded-pill blink">🟠</span> test-mode{% endif %}</span>
       <div class="col-lg-7 p-3 p-lg-5 pt-lg-3">
         <h1 class="display-4 fw-bold lh-1">{{site.title}}</h1>
         <p class="lead">{{site.description}}.</p>
@@ -12,18 +13,35 @@
 	  <img class="rounded-lg-3" src="{{site.avatar}}" alt="" width="420"></div>
 	 </div>
 </div>
+<style>
+.blink {
+  animation: blink-animation 2s steps(2, start) infinite;
+  -webkit-animation: blink-animation 2s steps(2, start) infinite;
+}
+
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+@-webkit-keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+</style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.env.api_key}}",
+    authDomain: "{{site.env.auth_domain}}",
+    projectId: "{{site.env.project_id}}",
+    storageBucket: "{{site.env.storage_bucket}}",
+    messagingSenderId: "{{site.env.sender_id}}",
+    appId: "{{site.env.app_id}}",
+    measurementId: "{{site.env.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);

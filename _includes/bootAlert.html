@@ -1,0 +1,25 @@
+<!-- GLOBAL ALERT -->
+<div id="globalAlertWrapper" class="position-fixed top-10 start-50 translate-middle-x p-3" style="z-index: 9999; width: 100%; max-width: 500px; display: none;">
+  <div id="globalAlert" class="alert alert-warning alert-dismissible fade show shadow" role="alert">
+    <p id="globalAlertMessage">Pesan alert di sini</p>
+	<hr>
+    <button type="button" class="btn btn-sm btn-outline-dark ms-3" id="globalAlertCloseBtn">Oke</button>
+  </div>
+</div>
+
+<script>
+function showGlobalAlert(message = "Ada sesuatu yang terjadi...", type = "warning") {
+  const alertWrapper = document.getElementById("globalAlertWrapper");
+  const alertBox = document.getElementById("globalAlert");
+  const alertMessage = document.getElementById("globalAlertMessage");
+
+  alertBox.className = `alert alert-${type} alert-dismissible fade show shadow`;
+  alertMessage.innerText = message;
+  alertWrapper.style.display = "block";
+}
+
+// Tombol Oke nutup alert
+document.getElementById("globalAlertCloseBtn").addEventListener("click", () => {
+  document.getElementById("globalAlertWrapper").style.display = "none";
+});
+</script>

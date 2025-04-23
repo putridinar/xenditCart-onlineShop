@@ -1,3 +1,8 @@
+---
+layout: compress
+xendit_options: test
+---
+
 <!DOCTYPE html>
 <html lang="{{ site.lang | default: page.lang | default: 'ID-id' }}">
 {% include head.html %}
@@ -11,6 +16,7 @@
 </div>
 {% include edit-modal.html %}
 {% include toast.html %}
+{% include bootAlert.html %}
 {% include footer.html %}
 {% include analytics.html %}
 <script src="{{ '/assets/frameworks/bootstrap/dist/js/bootstrap.bundle.min.js' | relative_url }}"></script>

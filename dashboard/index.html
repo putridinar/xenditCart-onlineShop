@@ -70,16 +70,16 @@ permalink: /dashboard
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.env.api_key}}",
+    authDomain: "{{site.env.auth_domain}}",
+    projectId: "{{site.env.project_id}}",
+    storageBucket: "{{site.env.storage_bucket}}",
+    messagingSenderId: "{{site.env.sender_id}}",
+    appId: "{{site.env.app_id}}",
+    measurementId: "{{site.env.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -87,9 +87,21 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // 🔥 Cek User Login
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "/superadmin"; // Kalau belum login, tendang ke /login
+    window.location.href = "/superadmin";
+    return;
+  }
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  const userData = userSnap.exists() ? userSnap.data() : null;
+
+  if (!userData || userData.role !== "admin") {
+    alert("❌ Akses ditolak. Ini khusus admin.");
+    window.location.href = "/";
+    return;
   }
 });
 
@@ -98,10 +110,10 @@ const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", () => {
     signOut(auth).then(() => {
-      alert("Logout berhasil, boss!");
+      showGlobalAlert("Logout berhasil, boss!");
       window.location.href = "/superadmin";
     }).catch((error) => {
-      alert("Logout gagal: " + error.message);
+      showGlobalAlert("Logout gagal: " + error.message);
     });
   });
 }

@@ -90,13 +90,13 @@ import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/fi
 import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.env.api_key}}",
+    authDomain: "{{site.env.auth_domain}}",
+    projectId: "{{site.env.project_id}}",
+    storageBucket: "{{site.env.storage_bucket}}",
+    messagingSenderId: "{{site.env.sender_id}}",
+    appId: "{{site.env.app_id}}",
+    measurementId: "{{site.env.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -109,12 +109,12 @@ const dropProfile = document.getElementById('dropProfile');
 logoutBtn.addEventListener('click', () => {
   signOut(auth)
     .then(() => {
-      alert("Logout berhasil! 👋");
+      showGlobalAlert("Logout berhasil! 👋");
       window.location.href = "/";
     })
     .catch((error) => {
       console.error(error);
-      alert("❌ Gagal logout: " + error.message);
+      showGlobalAlert("❌ Gagal logout: " + error.message);
     });
 });
 
@@ -127,13 +127,18 @@ onAuthStateChanged(auth, (user) => {
     checkoutSection.style.display = 'block'; // 🔥 TAMPILKAN
     dropProfile.style.display = "inline-block";
     renderCart();
+	
+      // 🖼 Gambar profil dari Google
+      const img = document.getElementById('profilePic');
+      img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg";
   } else {
     currentUser = null;
     checkoutSection.style.display = 'none'; // 🔥 SEMBUNYIKAN
     dropProfile.style.display = "none";
   }
 });
-
+	  
+	  
 function showCartToast(message = "Keranjang diperbarui!") {
   const toastEl = document.getElementById('cartToast');
   const toastMsg = document.getElementById('cartToastMessage');

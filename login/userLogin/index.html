@@ -1,5 +1,5 @@
 ---
-layout: none
+layout: compress
 title: Login User
 permalink: /userLogin
 ---
@@ -55,13 +55,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.env.api_key}}",
+    authDomain: "{{site.env.auth_domain}}",
+    projectId: "{{site.env.project_id}}",
+    storageBucket: "{{site.env.storage_bucket}}",
+    messagingSenderId: "{{site.env.sender_id}}",
+    appId: "{{site.env.app_id}}",
+    measurementId: "{{site.env.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);

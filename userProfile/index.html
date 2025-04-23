@@ -1,0 +1,128 @@
+---
+layout: default
+title: Edit Profil
+permalink: /userProfile
+---
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="mb-4 text-center">Profil Saya</h2>
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <form id="profileForm" class="card shadow-sm p-4">
+          <div class="text-center mb-3">
+            <img id="ppImage" src="https://ionicframework.com/docs/img/demos/avatar.svg" class="rounded-circle shadow" style="width: 100px; height: 100px; object-fit: cover;">
+          </div>
+          <div class="mb-3">
+            <label for="firstName" class="form-label">Nama Depan</label>
+            <input type="text" id="firstName" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="lastName" class="form-label">Nama Belakang</label>
+            <input type="text" id="lastName" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">No WhatsApp</label>
+            <input type="text" id="phone" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" class="form-control" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="shippingType" class="form-label">Jenis Pengiriman</label>
+            <select id="shippingType" class="form-select">
+              <option value="J&T">J&T</option>
+              <option value="JNE">JNE</option>
+              <option value="Grab">Grab</option>
+              <option value="Gojek">Gojek</option>
+            </select>
+          </div>
+
+          <h5 class="mt-4 mb-2">Alamat Lengkap</h5>
+          <div class="mb-2"><input type="text" id="street" class="form-control" placeholder="Jalan" required></div>
+          <div class="mb-2"><input type="text" id="city" class="form-control" placeholder="Kota" required></div>
+          <div class="mb-2"><input type="text" id="postalCode" class="form-control" placeholder="Kode Pos" required></div>
+          <div class="mb-2"><input type="text" id="province" class="form-control" placeholder="Provinsi" required></div>
+          <div class="mb-3"><input type="text" id="country" class="form-control" placeholder="Negara" required></div>
+
+          <button type="submit" class="btn btn-primary w-100">Simpan Profil</button>
+          <p id="statusMessage" class="text-center mt-3 text-success d-none">✅ Profil berhasil disimpan.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "{{ site.env.api_key }}",
+  authDomain: "{{ site.env.auth_domain }}",
+  projectId: "{{ site.env.project_id }}",
+  storageBucket: "{{ site.env.storage_bucket }}",
+  messagingSenderId: "{{ site.env.sender_id }}",
+  appId: "{{ site.env.app_id }}",
+  measurementId: "{{ site.env.measure_id }}"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+
+      // 🖼 Gambar profil dari Google
+const img = document.getElementById('ppImage');
+img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg";
+	  
+  document.getElementById('email').value = user.email;
+  const docRef = doc(db, "users", user.uid);
+  const snap = await getDoc(docRef);
+  
+  if (snap.exists()) {
+    const data = snap.data();
+    document.getElementById('firstName').value = data.firstName || "";
+    document.getElementById('lastName').value = data.lastName || "";
+    document.getElementById('phone').value = data.phone || "";
+    document.getElementById('shippingType').value = data.shippingType || "";
+    document.getElementById('street').value = data.address?.street || "";
+    document.getElementById('city').value = data.address?.city || "";
+    document.getElementById('postalCode').value = data.address?.postalCode || "";
+    document.getElementById('province').value = data.address?.province || "";
+    document.getElementById('country').value = data.address?.country || "";
+  }
+}
+ else {
+  if (!user) return window.location.href = "/userLogin";
+  }
+});
+
+document.getElementById("profileForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return showGlobalAlert("Silakan login dulu.");
+
+  const data = {
+    firstName: document.getElementById('firstName').value.trim(),
+    lastName: document.getElementById('lastName').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    shippingType: document.getElementById('shippingType').value,
+    address: {
+      street: document.getElementById('street').value.trim(),
+      city: document.getElementById('city').value.trim(),
+      postalCode: document.getElementById('postalCode').value.trim(),
+      province: document.getElementById('province').value.trim(),
+      country: document.getElementById('country').value.trim()
+    },
+    updatedAt: new Date()
+  };
+
+  await setDoc(doc(db, "users", user.uid), data);
+  showGlobalAlert("✅ Profil berhasil diperbarui!");
+});
+</script>

@@ -6,19 +6,23 @@
         <h5 class="modal-title" id="profileModalLabel">Profil Saya</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
       </div>
-      <div class="modal-body">
-        <div class="card text-center">
-          <div class="card-body">
-            <img src="https://ionicframework.com/docs/img/demos/avatar.svg" class="rounded-circle shadow mb-3" alt="Profile Picture" style="width: 100px; height: 100px; object-fit: cover;">
-            <h5 id="profileName" class="card-title mb-1">Nama User</h5>
-            <p id="profileEmail" class="text-muted mb-1">email@example.com</p>
-            <p id="profilePhone" class="text-muted mb-1">081234567890</p>
-            <hr>
-            <p id="profileAddress" class="small text-muted">Alamat user disini</p>
-            <button id="orderHistoryBtn" class="btn btn-primary w-100 mt-3">Riwayat Belanja</button>
-          </div>
-        </div>
-      </div>
+		<div class="modal-body">
+		  <div class="card text-center position-relative">
+			<a href="/userProfile" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" title="Edit Profil">
+			  <i class="bi bi-pencil"></i>
+			</a>
+
+			<div class="card-body">
+			  <img id="profileImg" src="https://ionicframework.com/docs/img/demos/avatar.svg" class="rounded-circle shadow mb-3" alt="Profile Picture" style="width: 100px; height: 100px; object-fit: cover;">
+			  <h5 id="profileName" class="card-title mb-1">Nama User</h5>
+			  <p id="profileEmail" class="text-muted mb-1">email@example.com</p>
+			  <p id="profilePhone" class="text-muted mb-1">081234567890</p>
+			  <hr>
+			  <p id="profileAddress" class="small text-muted">Alamat user disini</p>
+			  <button id="orderHistoryBtn" class="btn btn-primary w-100 mt-3">Riwayat Belanja</button>
+			</div>
+		  </div>
+		</div>
     </div>
   </div>
 </div>
@@ -29,13 +33,13 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
 
 // 🔥 Inisialisasi Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+    apiKey: "{{site.env.api_key}}",
+    authDomain: "{{site.env.auth_domain}}",
+    projectId: "{{site.env.project_id}}",
+    storageBucket: "{{site.env.storage_bucket}}",
+    messagingSenderId: "{{site.env.sender_id}}",
+    appId: "{{site.env.app_id}}",
+    measurementId: "{{site.env.measure_id}}"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -59,6 +63,10 @@ onAuthStateChanged(auth, async (user) => {
         : '-';
 
       document.getElementById('profileAddress').innerText = address;
+	  
+      // 🖼 Gambar profil dari Google
+      const img = document.getElementById('profileImg');
+      img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg";
     } else {
       console.error('❌ Profil user tidak ditemukan.');
     }
