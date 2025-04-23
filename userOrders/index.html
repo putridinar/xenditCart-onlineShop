@@ -1,0 +1,84 @@
+---
+layout: default
+title: Riwayat Pesanan
+permalink: /userOrders
+---
+
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="mb-4">Riwayat Pesanan Saya</h2>
+    <div id="orderHistory" class="row g-4">
+      <p>Loading...</p>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const orderHistoryEl = document.getElementById('orderHistory');
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "/userLogin";
+    return;
+  }
+
+  try {
+    const ordersRef = collection(db, `orders/${user.uid}/list`);
+    const snapshot = await getDocs(ordersRef);
+
+    if (snapshot.empty) {
+      orderHistoryEl.innerHTML = `<p class="text-center text-muted">Belum ada pesanan.</p>`;
+      return;
+    }
+
+    let html = "";
+    snapshot.forEach(docSnap => {
+      const order = docSnap.data();
+      const statusBadge = order.status === "paid"
+        ? `<span class="badge bg-success">Paid</span>`
+        : `<span class="badge bg-warning text-dark">Pending</span>`;
+
+      html += `
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">#${docSnap.id}</h5>
+              <p class="card-text">
+                <strong>Total:</strong> Rp ${order.total?.toLocaleString('id-ID') || 0}<br>
+                <strong>Status:</strong> ${statusBadge}<br>
+                <strong>Tanggal:</strong> ${new Date(order.createdAt?.seconds * 1000).toLocaleDateString('id-ID') || '-'}
+              </p>
+              <button class="btn btn-outline-primary w-100" disabled>Lihat Detail</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    orderHistoryEl.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    orderHistoryEl.innerHTML = `<p class="text-danger">Gagal memuat riwayat pesanan.</p>`;
+  }
+});
+</script>

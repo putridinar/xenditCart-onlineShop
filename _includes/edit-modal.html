@@ -1,44 +1,33 @@
 <!-- Modal Profile User -->
 <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="profileForm">
-        <div class="modal-header">
-          <h5 class="modal-title" id="profileModalLabel">Profile Saya</h5>
-        </div>
-        <div class="modal-body">
-
-          <div class="mb-3">
-            <label class="form-label">Nama</label>
-            <input type="text" id="profileName" class="form-control" readonly>
+<div class="modal-dialog">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title" id="profileModalLabel">Profil Saya</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="card text-center">
+          <div class="card-body">
+            <img src="https://ionicframework.com/docs/img/demos/avatar.svg" class="rounded-circle shadow mb-3" alt="Profile Picture" style="width: 100px; height: 100px; object-fit: cover;">
+            <h5 id="profileName" class="card-title mb-1">Nama User</h5>
+            <p id="profileEmail" class="text-muted mb-1">email@example.com</p>
+            <p id="profilePhone" class="text-muted mb-1">081234567890</p>
+            <hr>
+            <p id="profileAddress" class="small text-muted">Alamat user disini</p>
+            <button id="orderHistoryBtn" class="btn btn-primary w-100 mt-3">Riwayat Belanja</button>
           </div>
-
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" id="profileEmail" class="form-control" readonly>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Alamat Pengiriman</label>
-            <textarea id="profileAddress" class="form-control" rows="3"></textarea>
-          </div>
-
-          <div id="profileStatus" class="text-center"></div>
-
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// 🔥 Inisialisasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
   authDomain: "tokoputridinar.firebaseapp.com",
@@ -50,55 +39,36 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-const profilePic = document.getElementById('profilePic');
-const profileName = document.getElementById('profileName');
-const profileEmail = document.getElementById('profileEmail');
-const profileAddress = document.getElementById('profileAddress');
-const profileStatus = document.getElementById('profileStatus');
-
-// Cek login
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    profileEmail.value = user.email;
-    profileName.value = user.displayName || "Nama Tidak Tersedia";
-    profilePic.src = user.photoURL || 'https://ionicframework.com/docs/img/demos/avatar.svg';
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-    // Load alamat dari Firestore
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      profileAddress.value = data.address || "";
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+
+      document.getElementById('profileName').innerText = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+      document.getElementById('profileEmail').innerText = data.email || '-';
+      document.getElementById('profilePhone').innerText = data.phone || '-';
+
+      const address = data.address 
+        ? `${data.address.street || ''}, ${data.address.city || ''}, ${data.address.postalCode || ''}, ${data.address.province || ''}, ${data.address.country || ''}` 
+        : '-';
+
+      document.getElementById('profileAddress').innerText = address;
+    } else {
+      console.error('❌ Profil user tidak ditemukan.');
     }
+  } else {
+    console.error('❌ Tidak ada user login.');
   }
 });
 
-// Update Alamat
-const profileForm = document.getElementById('profileForm');
-
-profileForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const user = auth.currentUser;
-  if (!user) return;
-
-  try {
-    await setDoc(doc(db, "users", user.uid), {
-      address: profileAddress.value.trim()
-    }, { merge: true });
-
-    profileStatus.innerHTML = `<div class="text-success">✅ Alamat berhasil diperbarui!</div>`;
-    setTimeout(() => {
-      profileStatus.innerHTML = "";
-      bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
-    }, 1500);
-
-  } catch (error) {
-    console.error(error);
-    profileStatus.innerHTML = `<div class="text-danger">❌ Gagal update: ${error.message}</div>`;
-  }
+// 🔥 Klik tombol Riwayat Belanja
+document.getElementById('orderHistoryBtn').addEventListener('click', () => {
+  window.location.href = '/userOrders'; // Arahkan ke halaman riwayat
 });
 </script>
