@@ -4,10 +4,10 @@
 
 ## Feature
 
-* Dashboard Admin.
-* Login User
-* Payment autogenerate invoice (xendit)
-* Telegram BOT notifikasi
-* Produk like, rating
-* Firestore semua real-time
-* Cloudflare worker (API + Webhook)
+* Dashboard Admin. (CRUD firestore).
+* Login User.
+* Payment autogenerate invoice (xendit).
+* Telegram BOT notifikasi.
+* Produk like, rating.
+* Firestore semua real-time.
+* Cloudflare worker (API + Webhook).
