@@ -16,7 +16,7 @@ permalink: /userOrders
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -40,10 +40,15 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "/userLogin";
     return;
   }
+  
+window.viewOrderDetail = function(orderId) {
+  window.location.href = `/orderDetail?id=${orderId}`;
+}
 
   try {
-    const ordersRef = collection(db, `orders/${user.uid}/list`);
-    const snapshot = await getDocs(ordersRef);
+    const ordersRef = collection(db, "orders");
+    const q = query(ordersRef, where("userId", "==", user.uid));
+    const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       orderHistoryEl.innerHTML = `<p class="text-center text-muted">Belum ada pesanan.</p>`;
@@ -58,23 +63,23 @@ onAuthStateChanged(auth, async (user) => {
         : `<span class="badge bg-warning text-dark">Pending</span>`;
 
       html += `
-        <div class="col-md-6">
-          <div class="card shadow-sm">
+        <div class="col-md-6 mb-3">
+          <div class="card shadow-sm h-100">
             <div class="card-body">
-              <h5 class="card-title">#${docSnap.id}</h5>
+              <h5 class="card-title">#${order.externalId || docSnap.id}</h5>
               <p class="card-text">
-                <strong>Total:</strong> Rp ${order.total?.toLocaleString('id-ID') || 0}<br>
+                <strong>Total:</strong> Rp ${order.totalAmount?.toLocaleString('id-ID') || 0}<br>
                 <strong>Status:</strong> ${statusBadge}<br>
-                <strong>Tanggal:</strong> ${new Date(order.createdAt?.seconds * 1000).toLocaleDateString('id-ID') || '-'}
+                <strong>Tanggal:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('id-ID') : '-'}
               </p>
-              <button class="btn btn-outline-primary w-100" disabled>Lihat Detail</button>
+				<button class="btn btn-outline-primary w-100" onclick="viewOrderDetail('${order.externalId || docSnap.id}')">Lihat Detail</button>
             </div>
           </div>
         </div>
       `;
     });
 
-    orderHistoryEl.innerHTML = html;
+    orderHistoryEl.innerHTML = `<div class="row g-3">${html}</div>`;
 
   } catch (error) {
     console.error(error);

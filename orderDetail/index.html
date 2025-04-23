@@ -1,0 +1,91 @@
+---
+layout: default
+title: Detail Pesanan
+permalink: /orderDetail
+---
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="mb-4">Detail Pesanan</h2>
+    <div id="orderDetail" class="card shadow-sm p-4">
+      <p class="text-center text-muted">Memuat detail pesanan...</p>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
+  authDomain: "tokoputridinar.firebaseapp.com",
+  projectId: "tokoputridinar",
+  storageBucket: "tokoputridinar.firebasestorage.app",
+  messagingSenderId: "747234240117",
+  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
+  measurementId: "G-M2JGJH3NVQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id');
+const orderDetailEl = document.getElementById('orderDetail');
+
+async function loadOrderDetail() {
+  if (!id) {
+    orderDetailEl.innerHTML = '<p class="text-danger">❌ ID pesanan tidak valid.</p>';
+    return;
+  }
+
+  try {
+    const docRef = doc(db, "orders", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const order = docSnap.data();
+
+      const statusBadge = order.status === "paid"
+        ? `<span class="badge bg-success">Lunas</span>`
+        : `<span class="badge bg-warning text-dark">Belum Dibayar</span>`;
+
+      const alamat = order.address
+        ? `${order.address.street || ''}, ${order.address.city || ''}, ${order.address.postalCode || ''}, ${order.address.province || ''}, ${order.address.country || ''}`
+        : '-';
+
+      const itemsHtml = (order.cart || []).map(item => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${item.name} (${item.color || '-'} / ${item.size || '-'})
+          <span class="badge bg-primary rounded-pill">${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}</span>
+        </li>
+      `).join('');
+
+      orderDetailEl.innerHTML = `
+        <h5>ID Pesanan: <strong>${order.externalId || id}</strong></h5>
+        <p><strong>Status:</strong> ${statusBadge}</p>
+        <p><strong>Tanggal Order:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleDateString('id-ID') : '-'}</p>
+        <hr>
+        <h6>Data Pembeli:</h6>
+        <p><strong>Nama:</strong> ${order.firstName} ${order.lastName}</p>
+        <p><strong>Telepon:</strong> ${order.phone}</p>
+        <p><strong>Alamat:</strong> ${alamat}</p>
+        <hr>
+        <h6>Barang Dipesan:</h6>
+        <ul class="list-group mb-3">
+          ${itemsHtml}
+        </ul>
+        <h5 class="text-end">Total: <strong>Rp ${order.totalAmount?.toLocaleString('id-ID') || 0}</strong></h5>
+      `;
+    } else {
+      orderDetailEl.innerHTML = '<p class="text-danger">❌ Pesanan tidak ditemukan.</p>';
+    }
+  } catch (error) {
+    console.error(error);
+    orderDetailEl.innerHTML = '<p class="text-danger">❌ Gagal memuat detail pesanan.</p>';
+  }
+}
+
+loadOrderDetail();
+</script>
