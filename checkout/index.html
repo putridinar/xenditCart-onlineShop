@@ -166,10 +166,7 @@ form.addEventListener('submit', async (e) => {
     });
     
     // GENERATE INVOICE ID
-const now = new Date();
-const timestamp = Date.now();
-const formattedDate = now.toISOString().slice(0, 10).replace(/-/g, ''); // Contoh: 20250423
-const externalId = `INV-${formattedDate}-${timestamp}`;
+const externalId = "INV-" + Date.now();
 
 // SIAPKAN DATA ORDER
 const orderData = {
