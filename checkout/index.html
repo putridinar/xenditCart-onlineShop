@@ -166,7 +166,7 @@ form.addEventListener('submit', async (e) => {
       totalAmount += item.price * item.quantity;
     });
 
-	const externalId = "INV-" + Date.now(); // Pakai timestamp biar unik rapi
+	const externalId = "INV-" + Date.now();
 
 	const orderData = {
 	  userId: currentUser.uid,
@@ -183,7 +183,7 @@ form.addEventListener('submit', async (e) => {
 	  createdAt: new Date().toISOString()
 	};
 
-	// 🔥 Ini yang benar ➔ bikin dokumen dengan ID externalId
+	// 🔥 Ini yank
 	await setDoc(doc(db, "orders", externalId), orderData);
 
 	console.log("✅ Order berhasil dibuat dengan ID:", externalId);
