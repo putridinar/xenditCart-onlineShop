@@ -165,8 +165,8 @@ form.addEventListener('submit', async (e) => {
       });
       totalAmount += item.price * item.quantity;
     });
-
-const externalId = "INV-" + new Date().toISOString();
+const now = new Date();
+const externalId = `INV-${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}-${Date.now()}`;
 
     // 🔥 SIMPAN ORDER KE FIRESTORE
     const orderData = {
