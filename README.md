@@ -7,6 +7,7 @@
 * Dashboard Admin.
 * Login User
 * Payment autogenerate invoice (xendit)
-* Telegram Admin langsung notif
+* Telegram BOT notifikasi
 * Produk like, rating
 * Firestore semua real-time
+* Cloudflare worker (API + Webhook)
