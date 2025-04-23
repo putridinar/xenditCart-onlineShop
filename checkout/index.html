@@ -193,7 +193,7 @@ await setDoc(docRef, orderData);
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        external_id: docRef.id,
+        external_id: externalId,
         amount: totalAmount,
         buyerEmail: email,
         items: items
