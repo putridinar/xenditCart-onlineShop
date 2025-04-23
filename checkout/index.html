@@ -186,7 +186,7 @@ const externalId = "INV-" + new Date().toISOString();
 
    const docRef = doc(db, "orders", externalId);
 await setDoc(docRef, orderData);
-    console.log("✅ Order berhasil:", orderRef.id);
+    console.log("✅ Order berhasil:", docRef.id);
 
     // 🔥 KIRIM KE XENDIT
     const response = await fetch('https://xendit-app.putridinar.workers.dev', {
