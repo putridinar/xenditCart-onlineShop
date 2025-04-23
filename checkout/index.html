@@ -184,7 +184,8 @@ const externalId = "INV-" + new Date().toISOString();
       createdAt: new Date().toISOString()
     };
 
-    const orderRef = await addDoc(collection(db, "orders", externalId), orderData);
+   const docRef = doc(db, "orders", externalId);
+await setDoc(docRef, orderData);
     console.log("✅ Order berhasil:", orderRef.id);
 
     // 🔥 KIRIM KE XENDIT
