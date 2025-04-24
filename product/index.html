@@ -8,7 +8,7 @@ xendit_options: test
 <section class="product-detail py-2">
   <div class="container">
     <div id="productDetail" class="mt-5">
-  <span class="text-center">Memuat detail produk...</span>
+  <span class="d-flex text-center">Memuat detail produk...</span>
     </div>
   </div>
 </section>
@@ -107,7 +107,7 @@ function renderProductDetail(product) {
 
         <div class="d-flex align-items-center justify-content-between mb-3">
           <span class="h3 text-primary">Rp ${product.price.toLocaleString('id-ID')}</span>
-          <div id="ratingForm" class="d-flex align-items-center gap-1">
+          <div id="rating_form" class="d-flex align-items-center gap-1">
             ${[1, 2, 3, 4, 5].map(num => `<i class="bi bi-star text-muted fs-4 star-rate" data-star="${num}" style="cursor:pointer;"></i>`).join('')}
           </div>
         </div>
@@ -136,7 +136,7 @@ function renderProductDetail(product) {
         </div>
 
         <div class="d-flex gap-3">
-          <button class="btn btn-success flex-grow-1 py-2 shadow-sm">🛒 Beli Sekarang</button>
+          <button id="buyNowButton" class="btn btn-success flex-grow-1 py-2 shadow-sm">🛒 Beli Sekarang</button>
           <button class="btn btn-outline-dark flex-grow-1 py-2 shadow-sm" id="addToCartButton">
             <i class="bi bi-bag-plus"></i> Tambah ke Keranjang
           </button>
@@ -151,17 +151,17 @@ function renderProductDetail(product) {
 
 // ⭐ Event Bintang
 function setupRatingEvents() {
-  const ratingForm = document.getElementById("ratingForm");
+  const rating_form = document.getElementById("rating_form");
   const ratingMessage = document.getElementById("ratingMessage");
 
-  if (!ratingForm) {
-    console.warn("❌ Elemen ratingForm tidak ditemukan!");
+  if (!rating_form) {
+    console.warn("❌ Elemen rating_form tidak ditemukan!");
     return;
   }
 
   const voted = localStorage.getItem(`voted-${id}`);
   if (voted) {
-    ratingForm.style.pointerEvents = "none";
+    rating_form.style.pointerEvents = "none";
     ratingMessage.innerText = "✅ Anda sudah memberikan rating.";
     return;
   }
@@ -178,13 +178,13 @@ function setupRatingEvents() {
         const newTotal = (data.ratingTotal || 0) + ratingValue;
         const newCount = (data.ratingCount || 0) + 1;
 
-        await updateDoc(productRef, {
-          ratingTotal: newTotal,
-          ratingCount: newCount
-        });
+      await updateDoc(productRef, {
+        ratingTotal: newTotal,
+        ratingCount: newCount
+      });
 
         localStorage.setItem(`voted-${id}`, "true");
-        ratingForm.style.pointerEvents = "none";
+        rating_form.style.pointerEvents = "none";
         ratingMessage.innerText = "✅ Terima kasih atas rating Anda!";
       } catch (err) {
         console.error("❌ Gagal kirim rating:", err);
@@ -321,19 +321,15 @@ async function checkLikedStatus() {
 function setLikedUI(isLiked) {
   const likeButton = document.getElementById('likeButton');
   const icon = likeButton.querySelector('i');
-  likeButton.classList.toggle('btn-danger', isLiked);
-  likeButton.classList.toggle('btn-outline-danger', !isLiked);
+  likeButton.classList.toggle('btn-outline-danger', isLiked);
+  likeButton.classList.toggle('btn-danger', !isLiked);
   if (isLiked) {
     icon.classList.replace('bi-heart', 'bi-heart-fill');
   } else {
     icon.classList.replace('bi-heart-fill', 'bi-heart');
   }
 }
-console.log("🔍 Cek Elemen:", document.getElementById('ratingForm'));
-console.log("⭐ Jumlah Bintang:", document.querySelectorAll('.star-rate').length);
-console.log("⭐ Menyiapkan event rating...");
-console.log("🔍 Elemen ratingForm:", document.getElementById('ratingForm'));
-
+console.log("🔍 Cek Elemen:", document.getElementById('rating_form'));
 
 // 🚀 Mulai
 loadProduct();

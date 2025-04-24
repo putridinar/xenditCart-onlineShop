@@ -33,6 +33,9 @@
 			<li class="nav-item"><a class="nav-link" href="/promo">Promo</a></li>
 		  </ul>
 		  <div class="d-flex gap-2">
+			<a href="/superadmin" id="mimi-in" class="btn btn-outline-dark btn-round" style="display:none">
+			  <i class="bi bi-lock"></i>
+			</a>
 			<a href="/userLogin" id="log-in" class="btn btn-light btn-round" style="display:none"><i class="bi bi-person"></i></a>
 			<button class="btn btn-dark btn-round position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
 			  <i class="bi bi-cart"></i>
@@ -139,6 +142,7 @@ const db = getFirestore(app);
 
 const logoutBtn = document.getElementById('logoutBtn');
 const dropProfile = document.getElementById('dropProfile');
+const mimIn = document.getElementById('mimi-in');
 
 logoutBtn.addEventListener('click', () => {
   signOut(auth)
@@ -160,6 +164,7 @@ onAuthStateChanged(auth, (user) => {
     currentUser = user;
     checkoutSection.style.display = 'block'; // 🔥 TAMPILKAN
     dropProfile.style.display = "inline-block";
+    mimIn.style.display = 'none';
     renderCart();
 	
       // 🖼 Gambar profil dari Google
@@ -169,6 +174,7 @@ onAuthStateChanged(auth, (user) => {
     currentUser = null;
     checkoutSection.style.display = 'none'; // 🔥 SEMBUNYIKAN
     dropProfile.style.display = "none";
+    mimIn.style.display = 'inline-block';
   }
 });
 	  

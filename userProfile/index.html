@@ -30,12 +30,11 @@ permalink: /userProfile
             <input type="email" id="email" class="form-control" readonly>
           </div>
           <div class="mb-3">
-            <label for="shippingType" class="form-label">Jenis Pengiriman</label>
-            <select id="shippingType" class="form-select">
-              <option value="J&T">J&T</option>
-              <option value="JNE">JNE</option>
-              <option value="Grab">Grab</option>
-              <option value="Gojek">Gojek</option>
+            <label for="kelaminType" class="form-label">Jenis Kelamin</label>
+            <select id="kelaminType" class="form-select">
+              <option value="Cewek">Cewek</option>
+              <option value="Cowok">Cowok</option>
+              <option value="Tidak Punya">Tidak Punya</option>
             </select>
           </div>
 
@@ -88,7 +87,7 @@ img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg
     document.getElementById('firstName').value = data.firstName || "";
     document.getElementById('lastName').value = data.lastName || "";
     document.getElementById('phone').value = data.phone || "";
-    document.getElementById('shippingType').value = data.shippingType || "";
+    document.getElementById('kelaminType').value = data.kelaminType || "";
     document.getElementById('street').value = data.address?.street || "";
     document.getElementById('city').value = data.address?.city || "";
     document.getElementById('postalCode').value = data.address?.postalCode || "";
@@ -111,7 +110,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     lastName: document.getElementById('lastName').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
-    shippingType: document.getElementById('shippingType').value,
+    kelaminType: document.getElementById('kelaminType').value,
     address: {
       street: document.getElementById('street').value.trim(),
       city: document.getElementById('city').value.trim(),
@@ -124,5 +123,6 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
 
   await setDoc(doc(db, "users", user.uid), data);
   showGlobalAlert("✅ Profil berhasil diperbarui!");
+  window.location.href = "{{ site.baseurl }}/";
 });
 </script>

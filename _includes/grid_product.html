@@ -46,7 +46,7 @@ async function fetchAndRenderProducts() {
       grid.innerHTML += `
 		<div class="card position-relative shadow-sm border-0 rounded-4 overflow-hidden">
 		  <!-- Tombol Favorit di pojok atas -->
-		  <button class="btn btn-light position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" style="z-index: 10;">
+		  <button id="likeButton" class="btn btn-light position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" style="z-index: 10;">
 			<i class="bi bi-heart"></i>
 		  </button>
 
@@ -69,6 +69,24 @@ async function fetchAndRenderProducts() {
       `;
     });
 
+async function checkLikedStatus() {
+  if (!currentUser) return;
+  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
+  const likeSnap = await getDoc(likeRef);
+  setLikedUI(likeSnap.exists());
+}
+
+function setLikedUI(isLiked) {
+  const likeButton = document.getElementById('likeButton');
+  const icon = likeButton.querySelector('i');
+  likeButton.classList.toggle('btn-outline-danger', isLiked);
+  likeButton.classList.toggle('btn-danger', !isLiked);
+  if (isLiked) {
+    icon.classList.replace('bi-heart', 'bi-heart-fill');
+  } else {
+    icon.classList.replace('bi-heart-fill', 'bi-heart');
+  }
+}
   } catch (error) {
     grid.innerHTML = `<p class='loading'>Gagal memuat produk: ${error.message}</p>`;
   }
