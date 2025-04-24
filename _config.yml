@@ -36,11 +36,11 @@ sass:
   style: :compressed 
 
 plugins:
-  - jekyll-dotenv
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-archives
   - jekyll-paginate
+  - dotenv
 
 # Xendit Defaults
 xendit_options:
@@ -58,6 +58,8 @@ storage_bucket: "<%= ENV['storage_bucket'] %>"
 sender_id: "<%= ENV['sender_id'] %>"
 app_id: "<%= ENV['app_id'] %>"
 measure_id: "<%= ENV['measure_id'] %>"
+
+test-mode: "<%= ENV['test_mode'] %>"
 
 jekyll-archives:
   enabled:
@@ -79,3 +81,13 @@ exclude:
     - Gemfile.lock
     - LICENSE
     - README.md
+
+live_url: https://xendit-app.putridinar.workers.dev
+test_url: https://xendittest-app.putridinar.workers.dev
+api_key: AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8
+auth_domain: tokoputridinar.firebaseapp.com
+project_id: tokoputridinar
+storage_bucket: tokoputridinar.firebasestorage.app
+sender_id: 747234240117
+app_id: 1:747234240117:web:a87af4f6724ab87ad23a3c
+measure_id: G-M2JGJH3NVQ
