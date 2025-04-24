@@ -1,19 +1,45 @@
-<div class="container my-5">
-    <div class="row p-4 pb-0 pe-lg-0 pt-lg-5 align-items-center rounded-3 border shadow-lg overflow-hidden">
-		<span>{% if layout.xendit_options == "live" %}{% elsif layout.xendit_options == "test" %}<span class="badge bg-warning rounded-pill blink">🟠</span> {{site.test_mode}}{% endif %}</span>
-      <div class="col-lg-7 p-3 p-lg-5 pt-lg-3">
-        <h1 class="display-4 fw-bold lh-1">{{site.title}}</h1>
-        <p class="lead">{{site.description}}.</p>
-        <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3">
-          <a href="{{site.baseurl}}/userLogin" type="button" id="log-in" class="btn btn-primary btn-lg px-4 me-md-2 fw-bold" style="display:none;">Login</a>
-          <a href="{{site.baseurl}}/allProduct" type="button" class="btn btn-outline-secondary btn-lg px-4">Product</a>
-        </div>
-      </div>
-      <div class="mobile_hide col-lg-4 offset-lg-1 p-0 overflow-hidden shadow-lg" style="height:240px;">
-	  <img class="rounded-lg-3" src="{{site.avatar}}" alt="" width="420"></div>
-	 </div>
-</div>
+<section class="hero-section mb-5 text-white d-flex align-items-center justify-content-center" style="height: 100vh; font-family: 'Poppins', sans-serif;">
+  <div class="container text-center">
+    <div class="glass p-4 p-md-5 rounded-4 shadow-lg">
+      <h1 class="display-4 fw-bold mb-3">Temukan Gaya Terbaikmu</h1>
+      <p class="lead mb-4">Belanja fashion kekinian, nyaman, dan berkualitas. Buktikan gayamu sekarang!</p>
+      <a href="/allProduct" class="btn btn-primary btn-lg px-5 py-3 shadow glowing-btn">Belanja Sekarang</a>
+    </div>
+  </div>
+		<span style="position:fixed;top:63px;right:10px;">{% if layout.xendit_options == "live" %}{% elsif layout.xendit_options == "test" %}<span class="badge bg-warning rounded-pill blink">🟠</span> {{site.test_mode}}{% endif %}</span>
+</section>
 <style>
+.hero-section {
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  background-size: 400% 400%;
+  animation: gradientBG 10s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
+.glass {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glowing-btn {
+  border: none;
+  background-color: #00c6ff;
+  background-image: linear-gradient(to right, #0072ff, #00c6ff);
+  transition: 0.3s ease;
+  border-radius: 50px;
+}
+
+.glowing-btn:hover {
+  box-shadow: 0 0 15px 5px rgba(0, 198, 255, 0.5);
+  transform: scale(1.05);
+}
+
  .blink {
     -webkit-animation: 1s blink ease infinite;
     -moz-animation: 1s blink ease infinite;

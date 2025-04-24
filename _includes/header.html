@@ -1,57 +1,90 @@
 <header class="header bg-white shadow-sm mb-4">
-	<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+	<nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-blur shadow-sm">
 	  <div class="container">
-		<div class="d-flex">
-<!-- Tambahan di Navbar -->
-<div class="dropdown" id="dropProfile" style="display:none;">
-  <button class="btn btn-light border-0 p-0" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-    <img id="profilePic" src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover; border:2px solid #ccc;">
-  </button>
-  <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="userMenu">
-    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">Profile Saya</button></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
-  </ul>
-</div>
-		<a class="navbar-brand fw-bold ms-2" href="{{ site.baseurl }}/">{{ site.title }}</a>
-</div>
-		<div class="absolutemee">
-		<button class="btn btn-outline-dark d-lg-none me-2 position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" aria-controls="cartCanvas">
-		  <i class="bi bi-cart"></i>
-		  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCountMobile">0</span>
-		</button>
-		<!-- Hamburger toggle -->
-		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border:0;">
+	  <div class="d-flex">
+	<!-- Tambahan di Navbar -->
+	<div class="dropdown" id="dropProfile" style="display:none;">
+	  <button class="btn btn-light border-0 p-0" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+		<img id="profilePic" src="https://ionicframework.com/docs/img/demos/avatar.svg" alt="Profile" class="rounded-circle" style="width:40px; height:40px; object-fit:cover; border:2px solid #ccc;">
+	  </button>
+	  <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="userMenu">
+		<li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileModal">Profile Saya</button></li>
+		<li><hr class="dropdown-divider"></li>
+		<li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
+	  </ul>
+	</div>
+			<a class="navbar-brand fw-bold ms-2" href="{{ site.baseurl }}/">{{ site.title }}</a>
+	</div>
+	  <div class="d-flex">
+			<button class="btn btn-dark d-lg-none btn-round position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
+			  <i class="bi bi-cart"></i>
+			  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+			</button>
+		<button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
 		  <span class="navbar-toggler-icon"></span>
 		</button>
 		</div>
 
-		<div class="collapse navbar-collapse" id="navbarNav">
-		  <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-			<li class="nav-item">
-			  <a class="nav-link active" aria-current="page" href="/">Beranda</a>
-			</li>
-			<li class="nav-item">
-			  <a class="nav-link" href="/allProduct">Produk</a>
-			</li>
-			<li class="nav-item">
-			  <a class="nav-link" href="/promo">Promo</a>
-			</li>
-			<li class="nav-item">
-			  <a class="nav-link" href="/getContact">Kontak</a>
-			</li>
+		<!-- Desktop Menu -->
+		<div class="collapse navbar-collapse">
+		  <ul class="navbar-nav mx-auto">
+			<li class="nav-item"><a class="nav-link" href="/">Beranda</a></li>
+			<li class="nav-item"><a class="nav-link" href="/allProduct">Produk</a></li>
+			<li class="nav-item"><a class="nav-link" href="/promo">Promo</a></li>
 		  </ul>
-
-		  <!-- Cart button for desktop -->
-		  <button class="btn btn-outline-dark d-none d-lg-inline-block position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas" aria-controls="cartCanvas">
-			<i class="bi bi-cart"></i>
-			<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCountDesktop">0</span>
-		  </button>
+		  <div class="d-flex gap-2">
+			<a href="/userLogin" class="btn btn-light btn-round"><i class="bi bi-person"></i></a>
+			<button class="btn btn-dark btn-round position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
+			  <i class="bi bi-cart"></i>
+			  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+			</button>
+		  </div>
 		</div>
 	  </div>
 	</nav>
+	<!-- OFFCANVAS NAVBAR (Mobile Menu) -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Menu</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a class="nav-link" href="/">Beranda</a></li>
+      <li class="nav-item"><a class="nav-link" href="/allProduct">Produk</a></li>
+      <li class="nav-item"><a class="nav-link" href="/promo">Promo</a></li>
+      <li class="nav-item"><a class="nav-link" href="/userLogin">Login</a></li>
+    </ul>
+  </div>
+</div>
 </header>
 <style>
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .navbar-blur {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+  }
+
+  .btn-round {
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s ease;
+  }
+
+  .btn-round:hover {
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+  }
+
+  .dropdown-menu {
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  
 @keyframes shake {
   0% { transform: translate(0px, 0px) rotate(0deg); }
   20% { transform: translate(-2px, 2px) rotate(-2deg); }
