@@ -1,19 +1,19 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // 🔥 Config Firebase Project kamu
 const firebaseConfig = {
-    apiKey: "{{site.env.api_key}}",
-    authDomain: "{{site.env.auth_domain}}",
-    projectId: "{{site.env.project_id}}",
-    storageBucket: "{{site.env.storage_bucket}}",
-    messagingSenderId: "{{site.env.sender_id}}",
-    appId: "{{site.env.app_id}}",
-    measurementId: "{{site.env.measure_id}}"
+    apiKey: "{{site.api_key}}",
+    authDomain: "{{site.auth_domain}}",
+    projectId: "{{site.project_id}}",
+    storageBucket: "{{site.storage_bucket}}",
+    messagingSenderId: "{{site.sender_id}}",
+    appId: "{{site.app_id}}",
+    measurementId: "{{site.measure_id}}"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
 const auth = getAuth(app);
 

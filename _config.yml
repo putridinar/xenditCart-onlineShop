@@ -1,9 +1,11 @@
 # Jekyll Settings
+port: 1111
 
 title: Toko Putri
-description: Selamat datang di Toko Putri, destinasi fashion online Anda!
+description: Belanja fashion kekinian, nyaman, dan berkualitas. Buktikan gayamu sekarang!
 
-avatar: https://raw.githubusercontent.com/barryclark/jekyll-now/master/images/jekyll-logo.png
+avatar: https://ionicframework.com/docs/img/demos/avatar.svg
+logo: https://raw.githubusercontent.com/barryclark/jekyll-now/master/images/jekyll-logo.png
 
 footer-links:
   dribbble:
@@ -58,7 +60,8 @@ storage_bucket: "<%= ENV['storage_bucket'] %>"
 sender_id: "<%= ENV['sender_id'] %>"
 app_id: "<%= ENV['app_id'] %>"
 measure_id: "<%= ENV['measure_id'] %>"
-
+bot_token: "<%= ENV['bot_token'] %>"
+chat_id: "<%= ENV['chat_id'] %>"
 test-mode: "<%= ENV['test_mode'] %>"
 
 jekyll-archives:

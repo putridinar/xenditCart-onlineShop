@@ -33,7 +33,7 @@
 			<li class="nav-item"><a class="nav-link" href="/promo">Promo</a></li>
 		  </ul>
 		  <div class="d-flex gap-2">
-			<a href="/userLogin" class="btn btn-light btn-round"><i class="bi bi-person"></i></a>
+			<a href="/userLogin" id="log-in" class="btn btn-light btn-round" style="display:none"><i class="bi bi-person"></i></a>
 			<button class="btn btn-dark btn-round position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
 			  <i class="bi bi-cart"></i>
 			  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
@@ -61,6 +61,7 @@
 <style>
   body {
     font-family: 'Poppins', sans-serif;
+    background: #19303833;
   }
 
   .navbar-blur {
@@ -207,19 +208,24 @@ async function renderCart() {
       totalPrice += item.price * item.quantity;
 
       cartHTML += `
-        <div class="d-flex mb-3 border-bottom pb-2">
-          <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 80px; object-fit: cover;" class="rounded me-3">
-          <div class="flex-grow-1">
-            <h6 class="mb-1">${item.name}</h6>
-            <small class="text-muted">Warna: ${item.color || '-'}</small> | 
-            <small class="text-muted">Ukuran: ${item.size || '-'}</small><br>
-            <small class="text-muted">Jumlah: ${item.quantity}</small><br>
-            <strong>Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</strong>
-          </div>
-          <button class="btn btn-sm btn-outline-danger ms-2" style="height: fit-content;" onclick="removeCartItem('${itemId}')">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
+		<div class="cart-item d-flex align-items-start gap-3 p-3 mb-3 shadow-sm rounded-4 bg-white position-relative">
+		  <img src="${item.image}" alt="${item.name}" class="rounded-3" style="width: 90px; height: 90px; object-fit: cover;">
+
+		  <div class="flex-grow-1">
+			<h6 class="mb-1 fw-semibold text-dark">${item.name}</h6>
+			<div class="text-muted small mb-1">
+			  <span>Warna: ${item.color || '-'}</span> | 
+			  <span>Ukuran: ${item.size || '-'}</span>
+			</div>
+			<div class="small text-muted mb-1">Jumlah: ${item.quantity}</div>
+			<div class="fw-bold text-primary">Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</div>
+		  </div>
+
+		  <button class="btn btn-sm btn-light border-0 rounded-circle shadow-sm text-danger position-absolute top-0 end-0 m-2" onclick="removeCartItem('${itemId}')">
+			<i class="bi bi-x-lg"></i>
+		  </button>
+		</div>
+
       `;
     });
 
@@ -277,6 +283,15 @@ function goCheckout() {
   window.location.href = "/checkout";
 }
 </script>
+<style>
+.cart-item {
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+.cart-item:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+</style>
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
   <div id="cartToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">

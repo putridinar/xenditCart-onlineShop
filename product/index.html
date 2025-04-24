@@ -7,11 +7,24 @@ xendit_options: test
 
 <section class="product-detail py-2">
   <div class="container">
-    <div id="productDetail" class="row g-3">
+    <div id="productDetail" class="mt-5">
   <span class="text-center">Memuat detail produk...</span>
     </div>
   </div>
 </section>
+<style>
+.card img,
+.img-fluid {
+  border-radius: 1.5rem;
+  transition: transform 0.4s ease;
+}
+.card img:hover {
+  transform: scale(1.03);
+}
+.star-rate:hover {
+  color: gold !important;
+}
+</style>
 
 <script type="module" src="{{ '/assets/js/xenditCart.js' | relative_url }}"></script>
 
@@ -20,35 +33,39 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// 🔥 Inisialisasi Firebase
+// 🔥 Firebase Config
 const firebaseConfig = {
-    apiKey: "{{site.api_key}}",
-    authDomain: "{{site.auth_domain}}",
-    projectId: "{{site.project_id}}",
-    storageBucket: "{{site.storage_bucket}}",
-    messagingSenderId: "{{site.sender_id}}",
-    appId: "{{site.app_id}}",
-    measurementId: "{{site.measure_id}}"
+  apiKey: "{{site.api_key}}",
+  authDomain: "{{site.auth_domain}}",
+  projectId: "{{site.project_id}}",
+  storageBucket: "{{site.storage_bucket}}",
+  messagingSenderId: "{{site.sender_id}}",
+  appId: "{{site.app_id}}",
+  measurementId: "{{site.measure_id}}"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// Global State
 let currentUser = null;
+let importProduct = null;
+let selectedOptions = { color: null, size: null };
+let quantityInterval = null;
+
+// 🔐 Cek Login
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   if (user) checkLikedStatus();
 });
 
+// Ambil ID produk dari URL
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 const container = document.getElementById("productDetail");
 
-let importProduct = null;
-let selectedOptions = { color: null, size: null };
-let quantityInterval = null;
-
-// 🔥 Load Produk dari Firestore
+// 🔥 Load dan render produk
 async function loadProduct() {
   if (!id) {
     container.innerHTML = "<p>Produk tidak ditemukan.</p>";
@@ -64,52 +81,116 @@ async function loadProduct() {
 
     importProduct = docSnap.data();
     renderProductDetail(importProduct);
-    setupInteractions();
   } catch (error) {
     container.innerHTML = `<p>Gagal memuat produk: ${error.message}</p>`;
   }
 }
 
-// 🔥 Render Produk ke HTML
+// 🔥 Render Produk
 function renderProductDetail(product) {
-  let warnaButtons = product.colors?.map(color => `<button type="button" class="btn btn-outline-secondary color-btn" data-color="${color}">${color}</button>`).join('') || '';
-  let ukuranButtons = product.sizes?.map(size => `<button type="button" class="btn btn-outline-secondary size-btn" data-size="${size}">${size}</button>`).join('') || '';
+  const warnaButtons = product.colors?.map(color => `<button type="button" class="btn btn-outline-secondary color-btn" data-color="${color}">${color}</button>`).join('') || '';
+  const ukuranButtons = product.sizes?.map(size => `<button type="button" class="btn btn-outline-secondary size-btn" data-size="${size}">${size}</button>`).join('') || '';
 
   container.innerHTML = `
-    <div class="col-md-6">
-      <img class="img-fluid rounded shadow-sm" src="${product.image}" alt="${product.name}" style="width:100vw;">
-    </div>
-    <div class="col-md-6">
-      <h2 class="mb-3">${product.name}</h2>
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="h4 mb-0 text-primary">Rp ${product.price.toLocaleString('id-ID')}</span>
-        <button class="btn btn-outline-danger btn-like" id="likeButton">
-          <i class="bi bi-heart"></i> <span>Like</span>
-        </button>
-      </div>
-		<div id="ratingForm" class="d-flex gap-1 my-3">
-		  ${[1,2,3,4,5].map(num => `
-			<i class="bi bi-star text-muted fs-3 star-rate" data-star="${num}" style="cursor:pointer;"></i>
-		  `).join('')}
-		</div>
-		<p id="ratingMessage" class="text-success mt-2"></p>
-      <p class="text-muted">${product.description || ''}</p>
-      <div class="mb-4"><h6>Pilih Warna:</h6><div id="colorOptions" class="d-flex gap-2">${warnaButtons}</div></div>
-      <div class="mb-4"><h6>Pilih Ukuran:</h6><div id="sizeOptions" class="d-flex gap-2">${ukuranButtons}</div></div>
-      <div class="mb-4">
-        <h6>Jumlah:</h6>
-        <div class="d-flex">
-          <button class="btn btn-outline-secondary" id="decreaseQty">-</button>
-          <input type="text" id="quantityInput" class="form-control text-center mx-2" value="1" style="width: 60px;" readonly>
-          <button class="btn btn-outline-secondary" id="increaseQty">+</button>
+    <div class="row g-5 align-items-start">
+      <div class="col-md-6">
+        <div class="position-relative shadow rounded-4 overflow-hidden">
+          <img class="img-fluid w-100 object-fit-cover" style="max-height: 600px;" src="${product.image}" alt="${product.name}">
+          <button class="btn btn-light position-absolute top-0 end-0 m-3 rounded-circle shadow-sm" id="likeButton">
+            <i class="bi bi-heart fs-5"></i>
+          </button>
         </div>
       </div>
-		<div class="row-space">
-		  <button class="btn btn-success">Beli Sekarang</button>
-		  
-		  <button class="btn btn-primary" id="addToCartButton">Tambah ke Keranjang</button>
-		</div>
-    </div>`;
+
+      <div class="col-md-6">
+        <h1 class="fw-bold mb-3">${product.name}</h1>
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <span class="h3 text-primary">Rp ${product.price.toLocaleString('id-ID')}</span>
+          <div id="ratingForm" class="d-flex align-items-center gap-1">
+            ${[1, 2, 3, 4, 5].map(num => `<i class="bi bi-star text-muted fs-4 star-rate" data-star="${num}" style="cursor:pointer;"></i>`).join('')}
+          </div>
+        </div>
+        <p id="ratingMessage" class="text-success mb-3 small"></p>
+        <p class="text-muted lh-lg">${product.description || 'Deskripsi belum tersedia.'}</p>
+
+        <hr class="my-4">
+
+        <div class="mb-3">
+          <h6 class="fw-semibold">Pilih Warna:</h6>
+          <div id="colorOptions" class="d-flex flex-wrap gap-2">${warnaButtons}</div>
+        </div>
+
+        <div class="mb-3">
+          <h6 class="fw-semibold">Pilih Ukuran:</h6>
+          <div id="sizeOptions" class="d-flex flex-wrap gap-2">${ukuranButtons}</div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="fw-semibold">Jumlah:</h6>
+          <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary px-3" id="decreaseQty">−</button>
+            <input type="text" id="quantityInput" class="form-control text-center mx-2" style="width: 70px;" value="1" readonly>
+            <button class="btn btn-outline-secondary px-3" id="increaseQty">+</button>
+          </div>
+        </div>
+
+        <div class="d-flex gap-3">
+          <button class="btn btn-success flex-grow-1 py-2 shadow-sm">🛒 Beli Sekarang</button>
+          <button class="btn btn-outline-dark flex-grow-1 py-2 shadow-sm" id="addToCartButton">
+            <i class="bi bi-bag-plus"></i> Tambah ke Keranjang
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  setupInteractions();
+  setupRatingEvents(); // ✅ Tempatkan di SINI setelah DOM sudah dirender
+}
+
+// ⭐ Event Bintang
+function setupRatingEvents() {
+  const ratingForm = document.getElementById("ratingForm");
+  const ratingMessage = document.getElementById("ratingMessage");
+
+  if (!ratingForm) {
+    console.warn("❌ Elemen ratingForm tidak ditemukan!");
+    return;
+  }
+
+  const voted = localStorage.getItem(`voted-${id}`);
+  if (voted) {
+    ratingForm.style.pointerEvents = "none";
+    ratingMessage.innerText = "✅ Anda sudah memberikan rating.";
+    return;
+  }
+
+  document.querySelectorAll(".star-rate").forEach(star => {
+    star.addEventListener("click", async () => {
+      const ratingValue = parseInt(star.getAttribute("data-star"));
+      try {
+        const productRef = doc(db, "products", id);
+        const productSnap = await getDoc(productRef);
+        if (!productSnap.exists()) return;
+
+        const data = productSnap.data();
+        const newTotal = (data.ratingTotal || 0) + ratingValue;
+        const newCount = (data.ratingCount || 0) + 1;
+
+        await updateDoc(productRef, {
+          ratingTotal: newTotal,
+          ratingCount: newCount
+        });
+
+        localStorage.setItem(`voted-${id}`, "true");
+        ratingForm.style.pointerEvents = "none";
+        ratingMessage.innerText = "✅ Terima kasih atas rating Anda!";
+      } catch (err) {
+        console.error("❌ Gagal kirim rating:", err);
+      }
+    });
+  });
 }
 
 // 🔥 Setup Semua Interaksi
@@ -163,33 +244,6 @@ function setupInteractions() {
   likeButton.addEventListener('click', toggleLikeProduct);
 }
 
-document.querySelectorAll('.star-rate').forEach(star => {
-  star.addEventListener('click', async () => {
-    const ratingValue = parseInt(star.getAttribute('data-star'));
-    const productRef = doc(db, "products", id);
-    const productSnap = await getDoc(productRef);
-
-    if (productSnap.exists()) {
-      const data = productSnap.data();
-      const newTotal = (data.ratingTotal || 0) + ratingValue;
-      const newCount = (data.ratingCount || 0) + 1;
-
-      await updateDoc(productRef, {
-        ratingTotal: newTotal,
-        ratingCount: newCount
-      });
-
-      document.getElementById('ratingMessage').innerText = "✅ Terima kasih atas rating Anda!";
-      document.getElementById('ratingForm').style.pointerEvents = "none";
-    }
-  });
-});
-
-const voted = localStorage.getItem(`voted-${id}`);
-if (voted) {
-  document.getElementById('ratingForm').style.pointerEvents = "none";
-  document.getElementById('ratingMessage').innerText = "✅ Anda sudah memberikan rating.";
-}
 
 // 🔥 Animasi Quantity
 function animateQuantity(input, newValue) {
@@ -275,6 +329,11 @@ function setLikedUI(isLiked) {
     icon.classList.replace('bi-heart-fill', 'bi-heart');
   }
 }
+console.log("🔍 Cek Elemen:", document.getElementById('ratingForm'));
+console.log("⭐ Jumlah Bintang:", document.querySelectorAll('.star-rate').length);
+console.log("⭐ Menyiapkan event rating...");
+console.log("🔍 Elemen ratingForm:", document.getElementById('ratingForm'));
+
 
 // 🚀 Mulai
 loadProduct();

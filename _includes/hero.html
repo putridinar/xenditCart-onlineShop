@@ -2,11 +2,11 @@
   <div class="container text-center">
     <div class="glass p-4 p-md-5 rounded-4 shadow-lg">
       <h1 class="display-4 fw-bold mb-3">Temukan Gaya Terbaikmu</h1>
-      <p class="lead mb-4">Belanja fashion kekinian, nyaman, dan berkualitas. Buktikan gayamu sekarang!</p>
+      <p class="lead mb-4">{{site.description}}</p>
       <a href="/allProduct" class="btn btn-primary btn-lg px-5 py-3 shadow glowing-btn">Belanja Sekarang</a>
     </div>
   </div>
-		<span style="position:fixed;top:63px;right:10px;">{% if layout.xendit_options == "live" %}{% elsif layout.xendit_options == "test" %}<span class="badge bg-warning rounded-pill blink">🟠</span> {{site.test_mode}}{% endif %}</span>
+		<span style="position:fixed;top:63px;right:10px;">{% if layout.xendit_options == "live" %}{% elsif layout.xendit_options == "test" %}<span class="badge bg-warning rounded blink">🟠</span> {{site.test_mode}}{% endif %}</span>
 </section>
 <style>
 .hero-section {

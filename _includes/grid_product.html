@@ -7,17 +7,26 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8",
-  authDomain: "tokoputridinar.firebaseapp.com",
-  projectId: "tokoputridinar",
-  storageBucket: "tokoputridinar.firebasestorage.app",
-  messagingSenderId: "747234240117",
-  appId: "1:747234240117:web:a87af4f6724ab87ad23a3c",
-  measurementId: "G-M2JGJH3NVQ"
+  apiKey: "{{ site.api_key }}",
+  authDomain: "{{ site.auth_domain }}",
+  projectId: "{{ site.project_id }}",
+  storageBucket: "{{ site.storage_bucket }}",
+  messagingSenderId: "{{ site.sender_id }}",
+  appId: "{{ site.app_id }}",
+  measurementId: "{{ site.measure_id }}"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+function generateStars(total, count) {
+  const avg = count > 0 ? total / count : 0;
+  let stars = '';
+  for (let i = 1; i <= 5; i++) {
+    stars += `<i class="bi ${i <= avg ? 'bi-star-fill text-warning' : 'bi-star text-muted'}"></i>`;
+  }
+  return stars;
+}
 
 // Fetch & Render Produk
 async function fetchAndRenderProducts() {
@@ -35,14 +44,28 @@ async function fetchAndRenderProducts() {
     querySnapshot.forEach(doc => {
       const data = doc.data();
       grid.innerHTML += `
-        <div class="card">
-          <img class="card-img-top" src="${data.image}" alt="${data.name}">
-		  <div class="product-detail">
-          <h2 class="product-title">${data.name}</h2>
-          <p class="product-price">Rp ${data.price.toLocaleString('id-ID')}</p>
-          <a href="/product?id=${doc.id}" class="btn-buy">Lihat Produk</a>
+		<div class="card position-relative shadow-sm border-0 rounded-4 overflow-hidden">
+		  <!-- Tombol Favorit di pojok atas -->
+		  <button class="btn btn-light position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" style="z-index: 10;">
+			<i class="bi bi-heart"></i>
+		  </button>
+
+		  <!-- Gambar Produk -->
+		  <img class="card-img-top" src="${data.image}" alt="${data.name}" style="object-fit: cover; height: 250px;">
+
+		  <!-- Isi Card -->
+		  <div class="card-body text-center">
+			<h5 class="card-title fw-semibold mb-1">${data.name}</h5>
+			<p class="text-primary fw-bold">Rp ${data.price.toLocaleString('id-ID')}</p>
+
+			<!-- Rating -->
+			<div class="mb-2">
+			  ${generateStars(data.ratingTotal, data.ratingCount)}
+			</div>
+
+			<a href="/product?id=${doc.id}" class="btn btn-outline-dark w-100 rounded-pill">Lihat Produk</a>
 		  </div>
-        </div>
+		</div>
       `;
     });
 
