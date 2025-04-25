@@ -1,57 +1,134 @@
 <div class="slanted-footer mt-5"></div>
+<style>
+.slanted-footer {
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+  margin-bottom: -1px;
+}
+
+footer img {
+    display: inline-block;
+    height: 20px;
+    width: 64px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    margin: 3px 2px;
+    background-color: #fff;
+    border-radius: 2px;
+    background-position: center center;
+    background-size: 70% auto;
+    background-repeat: no-repeat;
+  transition: transform 0.2s ease;
+}
+footer img:hover {
+  transform: scale(1.1);
+}
+
+footer h5 {
+  font-weight: 600;
+}
+</style>
 <footer class="footer py-5 bg-light text-dark">
   <div class="container">
-    <div class="row">
-      <div class="col-md-3 mb-4">
-        <h5>Tentang Kami</h5>
-        <p class="small text-muted">
-          Toko online terpercaya untuk semua kebutuhan Anda. Belanja mudah dan aman dari rumah.
-        </p>
+    <div class="row gy-4">
+      <div class="col-md-3">
+        <h5>Toko Putri</h5>
+        <p class="small text-muted">Toko online terpercaya untuk semua kebutuhan Anda. Belanja mudah dan aman dari rumah.</p>
+        <p class="small mb-1"><i class="bi bi-geo-alt-fill me-2"></i>Jl. Mawar No. 123, Jakarta</p>
+        <p class="small mb-1"><i class="bi bi-envelope-fill me-2"></i>support@tokoputri.id</p>
+        <p class="small"><i class="bi bi-telephone-fill me-2"></i>+62 812 3456 7890</p>
       </div>
-      <div class="col-md-3 mb-4">
+
+      <div class="col-md-3">
         <h5>Kategori</h5>
-        <ul class="list-unstyled">
+        <ul class="list-unstyled small">
           <li><a href="#" class="text-dark text-decoration-none">Elektronik</a></li>
           <li><a href="#" class="text-dark text-decoration-none">Fashion</a></li>
           <li><a href="#" class="text-dark text-decoration-none">Rumah Tangga</a></li>
           <li><a href="#" class="text-dark text-decoration-none">Kesehatan</a></li>
         </ul>
       </div>
-      <div class="col-md-3 mb-4">
-        <h5>Bantuan</h5>
-        <ul class="list-unstyled">
-          <li><a href="#" class="text-dark text-decoration-none">Cara Belanja</a></li>
-          <li><a href="#" class="text-dark text-decoration-none">Syarat & Ketentuan</a></li>
-          <li><a href="#" class="text-dark text-decoration-none">Kebijakan Privasi</a></li>
-          <li><a href="#" class="text-dark text-decoration-none">Hubungi Kami</a></li>
-        </ul>
+
+      <div class="col-md-3">
+        <h5>Metode Pembayaran</h5>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <img src="https://plus62store.github.io/assets/images/logo/o/bca.png" alt="BCA">
+          <img src="https://plus62store.github.io/assets/images/logo/o/mandiri.png" alt="Mandiri">
+          <img src="https://plus62store.github.io/assets/images/logo/o/bri.png" alt="GoPay">
+          <img src="https://plus62store.github.io/assets/images/logo/o/bni.png" alt="OVO">
+          <img src="https://plus62store.github.io/assets/images/logo/o/xendit.png" alt="DANA">
+        </div>
+
+        <h5 class="mt-4">Pengiriman</h5>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <img src="https://plus62store.github.io/assets/images/logo/o/jne.png" alt="JNE">
+          <img src="https://plus62store.github.io/assets/images/logo/o/jnt.png" alt="J&T">
+          <img src="https://plus62store.github.io/assets/images/logo/o/gosend.png" alt="GoSend">
+          <img src="https://plus62store.github.io/assets/images/logo/o/grabexpress.png" alt="Grab">
+        </div>
       </div>
-      <div class="col-md-3 mb-4">
+
+      <div class="col-md-3">
         <h5>Newsletter</h5>
         <form>
           <div class="input-group mb-3">
-            <input type="email" class="form-control" placeholder="Email Anda" aria-label="Email Anda">
+            <input type="email" class="form-control" placeholder="Email Anda">
             <button class="btn btn-primary" type="submit">Daftar</button>
           </div>
         </form>
-        <div class="social-icons">
-          <a href="#" class="text-dark me-3"><i class="bi bi-facebook"></i></a>
-          <a href="#" class="text-dark me-3"><i class="bi bi-instagram"></i></a>
-          <a href="#" class="text-dark me-3"><i class="bi bi-twitter"></i></a>
+        <div class="d-flex gap-3">
+          <a href="#"><i class="bi bi-facebook fs-5 text-dark"></i></a>
+          <a href="#"><i class="bi bi-instagram fs-5 text-dark"></i></a>
+          <a href="#"><i class="bi bi-twitter fs-5 text-dark"></i></a>
         </div>
       </div>
     </div>
+
     <div class="text-center pt-4 border-top mt-4">
-      <small class="text-muted">© 2025 {{ site.title }}. All rights reserved.</small>
+      <small class="text-muted">© 2025 Toko Putri. All rights reserved.</small>
     </div>
   </div>
 </footer>
-<style>
-.slanted-footer {
-  width: 100%;
-  height: 80px;
-  background: #f8f9fa;
-  clip-path: polygon(0 0, 100% 100%, 0 100%);
-  margin-bottom: -1px;
-}
-</style>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "{{site.api_key}}",
+    authDomain: "{{site.auth_domain}}",
+    projectId: "{{site.project_id}}",
+    storageBucket: "{{site.storage_bucket}}",
+    messagingSenderId: "{{site.sender_id}}",
+    appId: "{{site.app_id}}",
+    measurementId: "{{site.measure_id}}"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const form = document.querySelector("form");
+  const input = form.querySelector("input[type='email']");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = input.value.trim();
+
+    if (!email || !email.includes("@")) {
+      showGlobalAlert("Mohon masukkan email yang valid!");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "newsletter"), {
+        email,
+        subscribedAt: serverTimestamp()
+      });
+      input.value = "";
+      showGlobalAlert("Terima kasih! 🎉 Anda sudah terdaftar.");
+    } catch (err) {
+      console.error("❌ Gagal simpan email:", err);
+      showGlobalAlert("Gagal mendaftar. Coba lagi nanti.");
+    }
+  });
+</script>

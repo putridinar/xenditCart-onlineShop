@@ -37,7 +37,9 @@ permalink: /userProfile
               <option value="Tidak Punya">Tidak Punya</option>
             </select>
           </div>
-            <input type="text" id="shippingType" value="J&T" class="form-control" style="display:hidden" readonly>
+          <div style="display:none;">
+            <input type="text" id="shippingType" value="J&T" style="display:none;" readonly>
+          </div>
 
           <h5 class="mt-4 mb-2">Alamat Lengkap</h5>
           <div class="mb-2"><input type="text" id="street" class="form-control" placeholder="Jalan" required></div>
@@ -88,6 +90,7 @@ img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg
     document.getElementById('firstName').value = data.firstName || "";
     document.getElementById('lastName').value = data.lastName || "";
     document.getElementById('phone').value = data.phone || "";
+    document.getElementById('email').value = data.email || "";
     document.getElementById('kelaminType').value = data.kelaminType || "";
     document.getElementById('shippingType').value = data.shippingType || "";
     document.getElementById('street').value = data.address?.street || "";
