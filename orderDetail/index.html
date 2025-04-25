@@ -62,6 +62,15 @@ async function loadOrderDetail() {
         </li>
       `).join('');
 
+      // 🔥 Tombol bayar jika status pending & invoiceUrl tersedia
+      const tombolBayar = (order.status === "pending" && order.invoiceUrl)
+        ? `<div class="text-end mt-4">
+             <a href="${order.invoiceUrl}" class="btn btn-primary btn-sm shadow-sm">
+               🔁 Checkout & Bayar
+             </a>
+           </div>`
+        : "";
+
       orderDetailEl.innerHTML = `
         <h5>ID Pesanan: <strong>${order.externalId || id}</strong></h5>
         <p><strong>Status:</strong> ${statusBadge}</p>
@@ -77,6 +86,7 @@ async function loadOrderDetail() {
           ${itemsHtml}
         </ul>
         <h5 class="text-end">Total: <strong>Rp ${order.totalAmount?.toLocaleString('id-ID') || 0}</strong></h5>
+        ${tombolBayar}
       `;
     } else {
       orderDetailEl.innerHTML = '<p class="text-danger">❌ Pesanan tidak ditemukan.</p>';

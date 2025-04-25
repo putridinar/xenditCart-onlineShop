@@ -98,21 +98,38 @@ function renderProducts(initial = true) {
   productsToShow.forEach(product => {
     if (!document.getElementById(`product-${product.id}`)) {
       productsGrid.innerHTML += `
-      <div class="col-6 col-md-4" id="product-${product.id}">
-        <div class="card h-100 shadow-sm border-0 hover-scale">
-          <div class="position-absolute top-0 start-0 badge bg-danger m-2">${product.isNew ? 'Baru' : (product.discount ? 'Diskon' : '')}</div>
-          <img src="${product.image}" class="card-img-top" alt="${product.name}" style="height: 180px; object-fit: cover;">
-          <div class="card-body text-center d-flex flex-column">
-		  <div class="rating-stars text-warning small mb-2" data-id="${product.id}">
-			  ${generateStars(product)}
-			</div>
-            <h5 class="card-title">${product.name}</h5>
-            <p class="card-text text-primary fw-bold">Rp ${product.price.toLocaleString('id-ID')}</p>
-            <a href="/product?id=${product.id}" class="btn btn-outline-primary mt-auto d-none d-md-block">Lihat Produk</a>
-            <a href="/product?id=${product.id}" class="stretched-link d-md-none"></a>
-          </div>
-        </div>
+<div class="col-6 col-md-4 col-lg-3 mb-4" id="product-${product.id}">
+  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden hover-card">
+    <!-- Badge -->
+    ${product.isNew || product.discount ? `
+      <div class="position-absolute top-0 start-0 m-2 z-2">
+        <span class="badge ${product.isNew ? 'bg-success' : 'bg-danger'} rounded-pill px-3 py-1 shadow-sm">
+          ${product.isNew ? 'Baru' : 'Diskon'}
+        </span>
       </div>
+    ` : ''}
+
+    <!-- Gambar -->
+    <div class="bg-light ratio ratio-1x1 rounded-top overflow-hidden">
+      <img src="${product.image}" alt="${product.name}" class="img-fluid object-fit-cover transition-scale w-100 h-100">
+      <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle shadow like-btn" title="Suka" style="width:40px;height:40px;">
+        <i class="bi bi-heart"></i>
+      </button>
+    </div>
+
+    <!-- Isi -->
+    <div class="card-body text-center d-flex flex-column px-3">
+      <div class="rating-stars text-warning small mb-2" data-id="${product.id}">
+        ${generateStars(product)}
+      </div>
+      <h6 class="fw-semibold text-dark text-truncate">${product.name}</h6>
+      <p class="text-primary fw-bold mb-3">Rp ${product.price.toLocaleString('id-ID')}</p>
+      <a href="/product?id=${product.id}" class="btn btn-outline-primary w-100 shadow-sm mt-auto d-none d-md-block">Lihat Produk</a>
+      <a href="/product?id=${product.id}" class="stretched-link d-md-none"></a>
+    </div>
+  </div>
+</div>
+
       `;
     }
   });
@@ -202,11 +219,25 @@ document.addEventListener("DOMContentLoaded", loadProducts);
 
 <!-- 🔥 Hover Scale CSS -->
 <style>
-.hover-scale {
+.hover-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 1rem;
 }
-.hover-scale:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+.hover-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.object-fit-cover {
+  object-fit: cover;
+}
+.transition-scale {
+  transition: transform 0.3s ease;
+}
+.hover-card:hover .transition-scale {
+  transform: scale(1.05);
+}
+.like-btn:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #dc3545;
 }
 </style>

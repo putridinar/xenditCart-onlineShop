@@ -83,7 +83,6 @@ permalink: /checkout
   </div>
 </div>
 
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, setDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -180,6 +179,7 @@ form.addEventListener('submit', async (e) => {
 	  cart: items,
 	  totalAmount,
 	  status: "pending",
+	  invoiceUrl: "/checkout",
 	  createdAt: new Date().toISOString()
 	};
 

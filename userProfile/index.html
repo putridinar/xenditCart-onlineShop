@@ -37,6 +37,7 @@ permalink: /userProfile
               <option value="Tidak Punya">Tidak Punya</option>
             </select>
           </div>
+            <input type="text" id="shippingType" value="J&T" class="form-control" style="display:hidden" readonly>
 
           <h5 class="mt-4 mb-2">Alamat Lengkap</h5>
           <div class="mb-2"><input type="text" id="street" class="form-control" placeholder="Jalan" required></div>
@@ -88,6 +89,7 @@ img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg
     document.getElementById('lastName').value = data.lastName || "";
     document.getElementById('phone').value = data.phone || "";
     document.getElementById('kelaminType').value = data.kelaminType || "";
+    document.getElementById('shippingType').value = data.shippingType || "";
     document.getElementById('street').value = data.address?.street || "";
     document.getElementById('city').value = data.address?.city || "";
     document.getElementById('postalCode').value = data.address?.postalCode || "";
@@ -111,6 +113,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
     kelaminType: document.getElementById('kelaminType').value,
+    shippingType: document.getElementById('shippingType').value,
     address: {
       street: document.getElementById('street').value.trim(),
       city: document.getElementById('city').value.trim(),

@@ -56,7 +56,12 @@
       <li class="nav-item"><a class="nav-link" href="/">Beranda</a></li>
       <li class="nav-item"><a class="nav-link" href="/allProduct">Produk</a></li>
       <li class="nav-item"><a class="nav-link" href="/promo">Promo</a></li>
-      <li class="nav-item"><a class="nav-link" href="/userLogin">Login</a></li>
+<li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="#" id="authLink">
+    <i class="bi bi-box-arrow-in-right" id="authIcon"></i>
+    <span id="authText">Login</span>
+  </a>
+</li>
     </ul>
   </div>
 </div>
@@ -143,6 +148,9 @@ const db = getFirestore(app);
 const logoutBtn = document.getElementById('logoutBtn');
 const dropProfile = document.getElementById('dropProfile');
 const mimIn = document.getElementById('mimi-in');
+  const authLink = document.getElementById('authLink');
+  const authIcon = document.getElementById('authIcon');
+  const authText = document.getElementById('authText');
 
 logoutBtn.addEventListener('click', () => {
   signOut(auth)
@@ -161,6 +169,17 @@ let currentUser = null;
 // 🔥 Cek user login
 onAuthStateChanged(auth, (user) => {
   if (user) {
+	authText.textContent = "Logout";
+      authIcon.className = "bi bi-box-arrow-right";
+      authLink.href = "#";
+      authLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        signOut(auth).then(() => {
+          window.location.href = "/";
+        }).catch((error) => {
+          alert("❌ Logout gagal: " + error.message);
+        });
+      });
     currentUser = user;
     checkoutSection.style.display = 'block'; // 🔥 TAMPILKAN
     dropProfile.style.display = "inline-block";
@@ -175,6 +194,9 @@ onAuthStateChanged(auth, (user) => {
     checkoutSection.style.display = 'none'; // 🔥 SEMBUNYIKAN
     dropProfile.style.display = "none";
     mimIn.style.display = 'inline-block';
+      authText.textContent = "Login";
+      authIcon.className = "bi bi-box-arrow-in-right";
+      authLink.href = "/userLogin";
   }
 });
 	  
