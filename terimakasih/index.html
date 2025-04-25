@@ -135,13 +135,13 @@ const timer = setInterval(() => {
     pesan += `👤 <b>Nama:</b> ${fullName}\n`;
     pesan += `📞 <b>Telepon:</b> ${buyer.phone || '-' }\n`;
     pesan += `🏠 <b>Alamat:</b> ${alamat}\n`;
-    pesan += `🚚 <b>Kurir:</b> ${buyer.kurir}\n\n`;
+    pesan += `🚚 <b>Kurir:</b> ${kurir}\n\n`;
     pesan += `<b>🛍️ Daftar Produk:</b>\n`;
 
     cartSnap.forEach((docSnap, index) => {
       const item = docSnap.data();
       total += item.price * item.quantity;
-      pesan += `\n✔${index + 1}. <b>${item.name}</b>\n`;
+      pesan += `<b>Produk: ${item.name}</b>\n`;
       pesan += `Warna: ${item.color || '-'}\n`;
 	  pesan += `Ukuran: ${item.size || '-'}\n`;
       pesan += `Qty: ${item.quantity} x Rp ${item.price.toLocaleString('id-ID')}\n`;

@@ -72,7 +72,12 @@ permalink: /checkout
             <div class="col-12 d-grid gap-2 mt-4">
               <button type="submit" class="btn btn-primary btn-lg">Lanjutkan Pembayaran</button>
             </div>
-
+			<div class="form-check mb-3">
+			  <input class="form-check-input" type="checkbox" id="useDefaultAddress">
+			  <label class="form-check-label" for="useDefaultAddress">
+				Gunakan alamat dari profil saya
+			  </label>
+			</div>
           </form>
 
           <div id="statusMessage" class="mt-3 text-center"></div>
@@ -91,7 +96,8 @@ permalink: /checkout
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, setDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc,
+  getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // FIREBASE CONFIG
@@ -112,10 +118,55 @@ const auth = getAuth(app);
 let currentUser = null;
 
 // CEK LOGIN
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
     document.getElementById('email').value = user.email || "";
+	
+const docRef = doc(db, "users", user.uid);
+const snap = await getDoc(docRef);
+const addressFields = ['street', 'city', 'postalCode', 'province', 'country'];
+const useDefaultCheckbox = document.getElementById('useDefaultAddress');
+  
+  if (snap.exists()) {
+    const data = snap.data();
+    document.getElementById('firstName').value = data.firstName || "";
+    document.getElementById('lastName').value = data.lastName || "";
+    document.getElementById('phone').value = data.phone || "";
+    document.getElementById('email').value = data.email || "";
+    document.getElementById('shippingType').value = data.shippingType || "";
+    document.getElementById('street').value = data.address?.street || "";
+    document.getElementById('city').value = data.address?.city || "";
+    document.getElementById('postalCode').value = data.address?.postalCode || "";
+    document.getElementById('province').value = data.address?.province || "";
+    document.getElementById('country').value = data.address?.country || "";
+  }
+  
+if (useDefaultCheckbox) {
+  useDefaultCheckbox.addEventListener('change', async () => {
+    if (useDefaultCheckbox.checked && currentUser) {
+      const docRef = doc(db, "users", currentUser.uid);
+      const snap = await getDoc(docRef);
+
+      if (snap.exists()) {
+        const address = snap.data().address || {};
+        // Isi & disable field
+        addressFields.forEach(field => {
+          const el = document.getElementById(field);
+          el.value = address[field] || "";
+          el.setAttribute('readonly', 'readonly');
+        });
+      }
+    } else {
+      // Hapus readonly & kosongkan
+      addressFields.forEach(field => {
+        const el = document.getElementById(field);
+        el.removeAttribute('readonly');
+      });
+    }
+  });
+}
+
   } else {
     showGlobalAlert("Silakan login dulu.");
     window.location.href = "/userLogin";

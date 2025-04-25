@@ -15,14 +15,16 @@
 	</div>
 			<a class="navbar-brand fw-bold ms-2" href="{{ site.baseurl }}/">{{ site.title }}</a>
 	</div>
-	  <div class="d-flex">
+	  <div class="d-flex gap-3 align-items-center">
 			<button class="btn btn-dark d-lg-none btn-round position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
 			  <i class="bi bi-cart"></i>
 			  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
 			</button>
-		<button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
-		  <span class="navbar-toggler-icon"></span>
-		</button>
+			<button class="custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-label="Toggle navigation">
+			  <span class="bar"></span>
+			  <span class="bar"></span>
+			  <span class="bar"></span>
+			</button>
 		</div>
 
 		<!-- Desktop Menu -->
@@ -33,7 +35,7 @@
 			<li class="nav-item"><a class="nav-link" href="/promo">Promo</a></li>
 		  </ul>
 		  <div class="d-flex gap-2">
-			<a href="/superadmin" id="mimi-in" class="btn btn-outline-dark btn-round" style="display:none">
+			<a href="/superadmin" id="mimi-in" class="btn btn-outline-dark btn-round">
 			  <i class="bi bi-lock"></i>
 			</a>
 			<a href="/userLogin" id="log-in" class="btn btn-light btn-round" style="display:none"><i class="bi bi-person"></i></a>
@@ -87,12 +89,45 @@
   .btn-round:hover {
     box-shadow: 0 0 15px rgba(0,0,0,0.15);
   }
-
+#cartCount {
+  transition: all 0.3s ease;
+  display: none;
+}
   .dropdown-menu {
     border-radius: 1rem;
     padding: 1rem;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   }
+  
+.navbar-nav .nav-link {
+  position: relative;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 2px;
+  background-color: #0d6efd;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+
+.navbar-nav .nav-link:hover::after,
+.navbar-nav .nav-link.active::after {
+  transform: scaleX(1);
+}
+
+.navbar-nav .nav-link.active {
+  color: #0d6efd;
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(13, 110, 253, 0.3);
+}
   
 @keyframes shake {
   0% { transform: translate(0px, 0px) rotate(0deg); }
@@ -107,6 +142,14 @@
   animation: shake 0.5s;
 }
 </style>
+<script>
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+    if (link.getAttribute('href') === currentPath) {
+      link.classList.add('active');
+    }
+  });
+</script>
 <!-- Offcanvas Keranjang -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="cartCanvas" aria-labelledby="cartOffcanvasLabel">
   <div class="offcanvas-header">
@@ -129,7 +172,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, onSnapshot, collection, getDocs, deleteDoc, doc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "{{site.api_key}}",
@@ -148,9 +191,35 @@ const db = getFirestore(app);
 const logoutBtn = document.getElementById('logoutBtn');
 const dropProfile = document.getElementById('dropProfile');
 const mimIn = document.getElementById('mimi-in');
-  const authLink = document.getElementById('authLink');
-  const authIcon = document.getElementById('authIcon');
-  const authText = document.getElementById('authText');
+const authLink = document.getElementById('authLink');
+const authIcon = document.getElementById('authIcon');
+const authText = document.getElementById('authText');
+
+document.addEventListener("DOMContentLoaded", () => {
+const cartCountEl = document.getElementById("cartCount");
+
+if (cartCountEl) {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const cartRef = collection(db, `carts/${user.uid}/items`);
+
+      onSnapshot(cartRef, (snapshot) => {
+        const totalItems = snapshot.docs.reduce((total, doc) => {
+          const item = doc.data();
+          return total + (item.quantity || 1);
+        }, 0);
+
+        cartCountEl.textContent = totalItems;
+        cartCountEl.style.display = totalItems > 0 ? "inline-block" : "none";
+      });
+    } else {
+      cartCountEl.textContent = 0;
+      cartCountEl.style.display = "none";
+    }
+  });
+}
+
+});
 
 logoutBtn.addEventListener('click', () => {
   signOut(auth)
@@ -169,6 +238,8 @@ let currentUser = null;
 // 🔥 Cek user login
 onAuthStateChanged(auth, (user) => {
   if (user) {
+    const cartRef = collection(db, `carts/${user.uid}/items`);
+
 	authText.textContent = "Logout";
       authIcon.className = "bi bi-box-arrow-right";
       authLink.href = "#";

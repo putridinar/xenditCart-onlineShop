@@ -24,3 +24,29 @@ a {
 	color: $link-color;
   }
 }
+	  .custom-toggler {
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: space-between;
+	  width: 32px;
+	  height: 24px;
+	  background: transparent;
+	  border: none;
+	  cursor: pointer;
+	  z-index: 1051;
+	  padding: 0;
+	}
+
+	.custom-toggler .bar {
+	  height: 3px;
+	  width: 100%;
+	  background-color: #000;
+	  border-radius: 3px;
+	  transition: 0.3s ease;
+	  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+	}
+
+	.custom-toggler:hover .bar {
+	  background-color: #0d6efd;
+	  box-shadow: 0 0 8px rgba(13, 110, 253, 0.6);
+	}

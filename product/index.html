@@ -247,7 +247,6 @@ function resetButtonState() {
   checkoutSpinner.classList.add('d-none');
   checkoutText.textContent = "🛒 Beli Sekarang";
 }
-
 // --- //
 
   setupInteractions();
@@ -267,6 +266,7 @@ function setupRatingEvents() {
   const voted = localStorage.getItem(`voted-${id}`);
   if (voted) {
     rating_form.style.pointerEvents = "none";
+		rating_form.classList.add('d-none');
     ratingMessage.innerText = "✅ Anda sudah memberikan rating.";
     return;
   }
