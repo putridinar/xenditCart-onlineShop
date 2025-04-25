@@ -136,7 +136,11 @@ function renderProductDetail(product) {
         </div>
 
         <div class="d-flex gap-3">
-          <button id="buyNowButton" class="btn btn-success flex-grow-1 py-2 shadow-sm">🛒 Beli Sekarang</button>
+			<button id="checkoutButton" class="btn btn-success flex-grow-1 py-2 shadow-sm" type="button">
+				<span class="spinner-border spinner-border-sm me-2 d-none" id="checkoutSpinner" role="status" aria-hidden="true"></span>
+				  <span id="checkoutText">🛒 Beli Sekarang</span>
+			</button>
+
           <button class="btn btn-outline-dark flex-grow-1 py-2 shadow-sm" id="addToCartButton">
             <i class="bi bi-bag-plus"></i> Tambah ke Keranjang
           </button>
@@ -144,6 +148,107 @@ function renderProductDetail(product) {
       </div>
     </div>
   `;
+  
+const checkoutButton = document.getElementById('checkoutButton');
+const checkoutSpinner = document.getElementById('checkoutSpinner');
+const checkoutText = document.getElementById('checkoutText');
+const rating_form = document.getElementById('rating_form');
+
+checkoutButton.addEventListener('click', async () => {
+  try {
+    // 🔥 Tampilkan spinner & disable tombol
+    checkoutButton.disabled = true;
+    checkoutSpinner.classList.remove('d-none');
+    checkoutText.textContent = "Memproses...";
+
+    // 🔥 Ambil data user profile dari Firestore
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (!userDoc.exists()) {
+      showGlobalAlert("❌ Data profil belum lengkap. Silakan lengkapi dulu.");
+      resetButtonState();
+      return;
+    }
+
+    const userData = userDoc.data();
+    const { firstName, lastName, phone, email, shippingType, address } = userData;
+
+    // 🔥 Ambil data cart
+    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
+    const cartSnap = await getDocs(cartRef);
+
+    if (cartSnap.empty) {
+      showGlobalAlert("Keranjang masih kosong, tidak bisa checkout.");
+      resetButtonState();
+      return;
+    }
+
+    const items = [];
+    let totalAmount = 0;
+    cartSnap.forEach(docSnap => {
+      const item = docSnap.data();
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        color: item.color || "-",
+        size: item.size || "-"
+      });
+      totalAmount += item.price * item.quantity;
+    });
+
+    const external_id = "INV-" + Date.now();
+    const orderData = {
+      userId: currentUser.uid,
+      external_id,
+      firstName,
+      lastName,
+      phone,
+      email,
+      shippingType,
+      address,
+      cart: items,
+      totalAmount,
+      status: "pending",
+      createdAt: new Date().toISOString()
+    };
+
+    await setDoc(doc(db, "orders", external_id), orderData);
+
+    // 🔥 Kirim ke Xendit
+    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        external_id,
+        amount: totalAmount,
+        buyerName: `${firstName} ${lastName}`,
+        buyerEmail: email,
+        buyerPhone: phone,
+        items: items
+      })
+    });
+
+    const result = await response.json();
+    if (result.invoice_url) {
+      window.location.href = result.invoice_url;
+    } else {
+      throw new Error(result.message || "Gagal membuat invoice.");
+    }
+
+  } catch (err) {
+    console.error("❌ Gagal checkout:", err);
+    showGlobalAlert("❌ Gagal checkout: " + err.message);
+    resetButtonState();
+  }
+});
+
+function resetButtonState() {
+  checkoutButton.disabled = false;
+  checkoutSpinner.classList.add('d-none');
+  checkoutText.textContent = "🛒 Beli Sekarang";
+}
+
+// --- //
 
   setupInteractions();
   setupRatingEvents(); // ✅ Tempatkan di SINI setelah DOM sudah dirender
@@ -185,6 +290,7 @@ function setupRatingEvents() {
 
         localStorage.setItem(`voted-${id}`, "true");
         rating_form.style.pointerEvents = "none";
+		rating_form.classList.add('d-none');
         ratingMessage.innerText = "✅ Terima kasih atas rating Anda!";
       } catch (err) {
         console.error("❌ Gagal kirim rating:", err);

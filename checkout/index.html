@@ -83,6 +83,12 @@ permalink: /checkout
   </div>
 </div>
 
+<div id="checkoutSpinner" class="text-center my-4" style="display: none;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, setDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -125,7 +131,7 @@ form.addEventListener('submit', async (e) => {
   const lastName = document.getElementById('lastName').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
-  const shippingType = document.getElementById('shippingType').value;
+  const shippingType = document.getElementById('shippingType').value.trim();
   
   const address = {
     street: document.getElementById('street').value.trim(),
@@ -140,78 +146,88 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  try {
-    // 🔥 AMBIL CART USER
-    const cartRef = collection(db, `carts/${currentUser.uid}/items`);
-    const cartSnap = await getDocs(cartRef);
+const checkoutSpinner = document.getElementById('checkoutSpinner');
 
-    if (cartSnap.empty) {
-      showGlobalAlert("Keranjang kosong, tidak bisa checkout.");
-      return;
-    }
+	try {
+	  checkoutSpinner.style.display = "block"; // 🔥 Tampilkan spinner
 
-    const items = [];
-    let totalAmount = 0;
+	  // 🔥 AMBIL CART USER
+	  const cartRef = collection(db, `carts/${currentUser.uid}/items`);
+	  const cartSnap = await getDocs(cartRef);
 
-    cartSnap.forEach(docSnap => {
-      const item = docSnap.data();
-      items.push({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        color: item.color || "-",
-        size: item.size || "-"
-      });
-      totalAmount += item.price * item.quantity;
-    });
+	  if (cartSnap.empty) {
+		showGlobalAlert("Keranjang kosong, tidak bisa checkout.");
+		checkoutSpinner.style.display = "none";
+		return;
+	  }
 
-	const external_id = "INV-" + Date.now();
+	  const items = [];
+	  let totalAmount = 0;
 
-	const orderData = {
-	  userId: currentUser.uid,
-	  external_id,
-	  firstName,
-	  lastName,
-	  phone,
-	  email,
-	  shippingType,
-	  address,
-	  cart: items,
-	  totalAmount,
-	  status: "pending",
-	  invoiceUrl: "/checkout",
-	  createdAt: new Date().toISOString()
-	};
+	  cartSnap.forEach(docSnap => {
+		const item = docSnap.data();
+		items.push({
+		  name: item.name,
+		  quantity: item.quantity,
+		  price: item.price,
+		  color: item.color || "-",
+		  size: item.size || "-"
+		});
+		totalAmount += item.price * item.quantity;
+	  });
 
-	// 🔥 Ini yank
-	await setDoc(doc(db, "orders", external_id), orderData);
+	  const external_id = "INV-" + Date.now();
 
-	console.log("✅ Order berhasil dibuat dengan ID:", external_id);
+	  const orderData = {
+		userId: currentUser.uid,
+		external_id,
+		firstName,
+		lastName,
+		phone,
+		email,
+		shippingType,
+		address,
+		cart: items,
+		totalAmount,
+		status: "pending",
+		createdAt: new Date().toISOString()
+	  };
 
-    // 🔥 KIRIM KE XENDIT
-    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        external_id: external_id,
-        amount: totalAmount,
-		buyerName: `${firstName} ${lastName}`,
-        buyerEmail: email,
-		buyerPhone: phone, 
-        items: items
-      })
-    });
+	  console.log("✅ Order berhasil dibuat dengan ID:", external_id);
 
-    const result = await response.json();
-    if (result.invoice_url) {
-      window.location.href = result.invoice_url;
-    } else {
-      throw new Error(result.message || "Gagal membuat invoice.");
-    }
+	  // 🔥 KIRIM KE XENDIT
+	  const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+		  external_id: external_id,
+		  amount: totalAmount,
+		  buyerName: `${firstName} ${lastName}`,
+		  buyerEmail: email,
+		  buyerPhone: phone,
+		  items: items
+		})
+	  });
 
-  } catch (error) {
-    console.error("❌ Gagal checkout:", error);
-    showGlobalAlert("❌ Gagal checkout: " + error.message);
-  }
+	  const result = await response.json();
+
+	  if (result.invoice_url) {
+		// 🔥 Simpan dengan invoiceUrl dari Xendit
+		await setDoc(doc(db, "orders", external_id), {
+		  ...orderData,
+		  invoiceUrl: result.invoice_url
+		});
+
+		window.location.href = result.invoice_url;
+	  } else {
+		throw new Error(result.message || "Gagal membuat invoice.");
+	  }
+
+	} catch (error) {
+	  console.error("❌ Gagal checkout:", error);
+	  showGlobalAlert("❌ Gagal checkout: " + error.message);
+	} finally {
+	  checkoutSpinner.style.display = "none"; // 🔥 Sembunyikan spinner
+	}
 });
 </script>

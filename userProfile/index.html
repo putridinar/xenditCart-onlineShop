@@ -116,7 +116,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
     kelaminType: document.getElementById('kelaminType').value,
-    shippingType: document.getElementById('shippingType').value,
+    shippingType: document.getElementById('shippingType').value.trim(),
     address: {
       street: document.getElementById('street').value.trim(),
       city: document.getElementById('city').value.trim(),
