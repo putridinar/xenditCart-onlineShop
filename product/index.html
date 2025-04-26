@@ -74,25 +74,25 @@ const id = params.get("id");
 const container = document.getElementById("productDetail");
 
 // 🔥 Load dan render produk
+// 🚀 Setelah load product berhasil baru jalanin setupRating()
 async function loadProduct() {
-  if (!id) {
-    container.innerHTML = "<p>Produk tidak ditemukan.</p>";
-    return;
-  }
+  if (!id) return;
 
   try {
     const docSnap = await getDoc(doc(db, "products", id));
-    if (!docSnap.exists()) {
-      container.innerHTML = "<p>Produk tidak ditemukan.</p>";
-      return;
-    }
+    if (!docSnap.exists()) return;
 
     importProduct = docSnap.data();
-    renderProductDetail(importProduct);
+    renderProductDetail(importProduct); // 🔥 Ini render ratingForm
+
+    setupInteractions(); // tombol warna / size
+    setupRating();        // 🔥 BARU SEKARANG dipanggil setelah render
+
   } catch (error) {
-    container.innerHTML = `<p>Gagal memuat produk: ${error.message}</p>`;
+    console.error("❌ Error load product:", error);
   }
 }
+
 
 // 🔥 Render Produk
 function renderProductDetail(product) {
@@ -262,86 +262,6 @@ function resetButtonState() {
 
 const productId = params.get("id");
 
-// ✅ Ini nanti dipanggil kalau DOM udah beres
-async function setupRating() {
-  const ratingForm = document.getElementById('ratingForm');
-  const ratingMessage = document.getElementById('ratingMessage');
-  if (!ratingForm || !ratingMessage) {
-    console.error("❌ Elemen ratingForm atau ratingMessage tidak ditemukan.");
-    return;
-  }
-
-  if (!productId) {
-    console.error("❌ Product ID tidak ditemukan di URL.");
-    return;
-  }
-
-  if (!currentUser) {
-    console.warn("⚠️ User belum login, rating disable.");
-    return;
-  }
-
-  try {
-    const userRatingRef = doc(db, `ratings/${currentUser.uid}_${productId}`);
-    const ratingSnap = await getDoc(userRatingRef);
-
-    if (ratingSnap.exists()) {
-      const userRating = ratingSnap.data().rating;
-      showRatedStars(userRating);
-      ratingForm.style.pointerEvents = "none";
-      ratingMessage.innerText = `✅ Anda memberi rating ${userRating} ⭐`;
-    } else {
-      // Belum rating ➔ siapin klik bintang
-      document.querySelectorAll('.star-rate').forEach(star => {
-        star.addEventListener('click', async () => {
-          const ratingValue = parseInt(star.getAttribute('data-star'));
-
-          try {
-            const productRef = doc(db, "products", productId);
-            const productSnap = await getDoc(productRef);
-
-            if (productSnap.exists()) {
-              const data = productSnap.data();
-              const newTotal = (data.ratingTotal || 0) + ratingValue;
-              const newCount = (data.ratingCount || 0) + 1;
-
-              await updateDoc(productRef, {
-                ratingTotal: newTotal,
-                ratingCount: newCount
-              });
-            }
-
-            await setDoc(userRatingRef, {
-              userId: currentUser.uid,
-              productId: productId,
-              rating: ratingValue,
-              createdAt: new Date().toISOString()
-            });
-
-            showRatedStars(ratingValue);
-            ratingForm.style.pointerEvents = "none";
-            ratingMessage.innerText = `✅ Terima kasih atas rating ${ratingValue} ⭐ Anda!`;
-
-          } catch (error) {
-            console.error("❌ Error saat submit rating:", error);
-          }
-        });
-      });
-    }
-  } catch (error) {
-    console.error("❌ Error cek rating user:", error);
-  }
-}
-
-// 🔥 Bikin bintang yang sudah di-rate jadi aktif
-function showRatedStars(value) {
-  document.querySelectorAll('.star-rate').forEach(star => {
-    const starValue = parseInt(star.getAttribute('data-star'));
-    star.classList.toggle('text-warning', starValue <= value);
-    star.classList.toggle('text-muted', starValue > value);
-  });
-}
-
 // ✅ Setelah login, baru setup
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
@@ -401,6 +321,86 @@ function setupInteractions() {
 
   const likeButton = document.getElementById('likeButton');
   likeButton.addEventListener('click', toggleLikeProduct);
+}
+
+// ✅ Ini nanti dipanggil kalau DOM udah beres
+async function setupRating() {
+  const ratingForm = document.getElementById('ratingForm');
+  const ratingMessage = document.getElementById('ratingMessage');
+  if (!ratingForm || !ratingMessage) {
+    console.error("❌ Elemen ratingForm atau ratingMessage tidak ditemukan.");
+    return;
+  }
+
+  if (!productId) {
+    console.error("❌ Product ID tidak ditemukan di URL.");
+    return;
+  }
+
+  if (!currentUser) {
+    console.warn("⚠️ User belum login, rating disable.");
+    return;
+  }
+
+  try {
+    const userRatingRef = doc(db, `ratings/${currentUser.uid}/products/${id}`);
+    const ratingSnap = await getDoc(userRatingRef);
+
+    if (ratingSnap.exists()) {
+      const userRating = ratingSnap.data().rating;
+      showRatedStars(userRating);
+      ratingForm.style.pointerEvents = "none";
+      ratingMessage.innerText = `✅ Anda memberi rating ${userRating} ⭐`;
+    } else {
+      // Belum rating ➔ siapin klik bintang
+      document.querySelectorAll('.star-rate').forEach(star => {
+        star.addEventListener('click', async () => {
+          const ratingValue = parseInt(star.getAttribute('data-star'));
+
+          try {
+            const productRef = doc(db, "products", productId);
+            const productSnap = await getDoc(productRef);
+
+            if (productSnap.exists()) {
+              const data = productSnap.data();
+              const newTotal = (data.ratingTotal || 0) + ratingValue;
+              const newCount = (data.ratingCount || 0) + 1;
+
+              await updateDoc(productRef, {
+                ratingTotal: newTotal,
+                ratingCount: newCount
+              });
+            }
+
+            await setDoc(userRatingRef, {
+              userId: currentUser.uid,
+              productId: productId,
+              rating: ratingValue,
+              createdAt: new Date().toISOString()
+            });
+
+            showRatedStars(ratingValue);
+            ratingForm.style.pointerEvents = "none";
+            ratingMessage.innerText = `✅ Terima kasih atas rating ${ratingValue} ⭐ Anda!`;
+
+          } catch (error) {
+            console.error("❌ Error saat submit rating:", error);
+          }
+        });
+      });
+    }
+  } catch (error) {
+    console.error("❌ Error cek rating user:", error);
+  }
+}
+
+// 🔥 Bikin bintang yang sudah di-rate jadi aktif
+function showRatedStars(value) {
+  document.querySelectorAll('.star-rate').forEach(star => {
+    const starValue = parseInt(star.getAttribute('data-star'));
+    star.classList.toggle('text-warning', starValue <= value);
+    star.classList.toggle('text-muted', starValue > value);
+  });
 }
 
 
