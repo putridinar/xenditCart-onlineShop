@@ -18,7 +18,7 @@
 	  <div class="d-flex gap-3 align-items-center">
 			<button class="btn btn-dark d-lg-none btn-round position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
 			  <i class="bi bi-cart"></i>
-			  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+			  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="countCart">0</span>
 			</button>
 			<button class="custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-label="Toggle navigation">
 			  <span class="bar"></span>
@@ -197,7 +197,28 @@ const authText = document.getElementById('authText');
 
 document.addEventListener("DOMContentLoaded", () => {
 const cartCountEl = document.getElementById("cartCount");
+const countCartEl = document.getElementById("countCart");
 
+if (countCartEl) {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const cartRef = collection(db, `carts/${user.uid}/items`);
+
+      onSnapshot(cartRef, (snapshot) => {
+        const totalItems = snapshot.docs.reduce((total, doc) => {
+          const item = doc.data();
+          return total + (item.quantity || 1);
+        }, 0);
+
+        countCartEl.textContent = totalItems;
+        countCartEl.style.display = totalItems > 0 ? "inline-block" : "none";
+      });
+    } else {
+      countCartEl.textContent = 0;
+      countCartEl.style.display = "none";
+    }
+  });
+}
 if (cartCountEl) {
   onAuthStateChanged(auth, (user) => {
     if (user) {
