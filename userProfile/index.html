@@ -78,12 +78,12 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
 
       // 🖼 Gambar profil dari Google
-const img = document.getElementById('ppImage');
-img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg";
-	  
-  document.getElementById('email').value = user.email;
-  const docRef = doc(db, "users", user.uid);
-  const snap = await getDoc(docRef);
+	const img = document.getElementById('ppImage');
+	img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg";
+		  
+	document.getElementById('email').value = user.email;
+	const docRef = doc(db, "users", user.uid);
+	const snap = await getDoc(docRef);
   
   if (snap.exists()) {
     const data = snap.data();
@@ -115,7 +115,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     lastName: document.getElementById('lastName').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
-    kelaminType: document.getElementById('kelaminType').value,
+    kelaminType: document.getElementById('kelaminType').value.trim(),
     shippingType: document.getElementById('shippingType').value.trim(),
     address: {
       street: document.getElementById('street').value.trim(),

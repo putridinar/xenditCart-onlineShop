@@ -178,12 +178,13 @@ if (useDefaultCheckbox) {
 const form = document.getElementById('checkoutForm');
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const user = auth.currentUser;
 
   const firstName = document.getElementById('firstName').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
-  const shippingType = document.getElementById('shippingType').value;
+  const shippingType = document.getElementById('shippingType').value.trim();
   
   const address = {
     street: document.getElementById('street').value.trim(),
@@ -208,7 +209,7 @@ const checkoutSpinner = document.getElementById('checkoutSpinner');
 	  const cartSnap = await getDocs(cartRef);
 
 	  if (cartSnap.empty) {
-		showGlobalAlert("Keranjang kosong, tidak bisa checkout.");
+		showGlobalAlert("Keranjang masih kosong, tidak bisa checkout.");
 		checkoutSpinner.style.display = "none";
 		return;
 	  }

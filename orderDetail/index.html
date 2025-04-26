@@ -8,7 +8,11 @@ permalink: /orderDetail
   <div class="container">
     <h2 class="mb-4">Detail Pesanan</h2>
     <div id="orderDetail" class="card shadow-sm p-4">
-      <p class="text-center text-muted">Memuat detail pesanan...</p>
+<div id="orderSpinner" class="text-center my-4" style="display: none;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
     </div>
   </div>
 </section>
@@ -33,6 +37,7 @@ const db = getFirestore(app);
 const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
 const orderDetailEl = document.getElementById('orderDetail');
+const orderSpinner = document.getElementById('orderSpinner');
 
 async function loadOrderDetail() {
   if (!id) {
@@ -41,10 +46,12 @@ async function loadOrderDetail() {
   }
 
   try {
+	orderSpinner.style.display = "block"; // 🔥 Tampilkan spinner
     const docRef = doc(db, "orders", id);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
+		orderSpinner.style.display = "none";
       const order = docSnap.data();
 
       const statusBadge = order.status === "paid"
