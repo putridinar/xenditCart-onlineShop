@@ -150,8 +150,8 @@ const timer = setInterval(() => {
     pesan += `\n💰 <b>Total Pembayaran:</b> Rp ${total.toLocaleString('id-ID')}`;
 
     // 🔥 Kirim Telegram
-    const chat_id = "1903170022";
-    const token = "5323538027:AAEKFXTpY40G1PKSrFsKzTDVeR4joDsXR9I";
+    const chat_id = "{{site.chat_id}}";
+    const token = "{{site.bot_token}}";
     const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(pesan)}&parse_mode=html`;
 
     const response = await fetch(url);

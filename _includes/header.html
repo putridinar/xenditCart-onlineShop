@@ -361,11 +361,11 @@ window.removeCartItem = async function(itemId) {
 
   try {
     await deleteDoc(doc(db, `carts/${currentUser.uid}/items/${itemId}`));
-    showCartToast("🗑️ Item dihapus dari keranjang!");
+    showCartToast("🗑️ Item dihapus dari keranjang!", "danger");
     renderCart(); // Refresh setelah hapus
   } catch (error) {
     console.error('Error hapus item:', error);
-    showCartToast("❌ Gagal hapus item!", "danger");
+    showCartToast("❌ Gagal hapus item!", "warning");
   }
 }
 
