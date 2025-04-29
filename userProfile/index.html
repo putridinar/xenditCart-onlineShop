@@ -115,8 +115,8 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     lastName: document.getElementById('lastName').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     email: document.getElementById('email').value.trim(),
-    kelaminType: document.getElementById('kelaminType').value.trim(),
-    shippingType: document.getElementById('shippingType').value.trim(),
+    kelaminType: document.getElementById('kelaminType').value,
+    shippingType: document.getElementById('shippingType').value,
     address: {
       street: document.getElementById('street').value.trim(),
       city: document.getElementById('city').value.trim(),
