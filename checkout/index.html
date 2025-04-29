@@ -34,13 +34,12 @@ permalink: /checkout
             </div>
 
             <div class="col-md-12">
-              <label for="shippingType" class="form-label">Jenis Pengiriman</label>
-              <select id="shippingType" class="form-select" required>
-                <option value="">Pilih Pengiriman</option>
-                <option value="J&T">J&T</option>
-                <option value="JNE">JNE</option>
-                <option value="Grab">Grab</option>
-                <option value="Gojek">Gojek</option>
+              <label for="kelaminType" class="form-label">Gender</label>
+              <select id="kelaminType" class="form-select" required>
+                <option value="">Pilih Gender</option>
+                <option value="Cewek">Cewek</option>
+                <option value="Cowok">Cowok</option>
+                <option value="Tidak Ada">Tidak Ada</option>
               </select>
             </div>
 
@@ -51,6 +50,17 @@ permalink: /checkout
 			  </label>
 			</div>
 			
+            <div class="col-md-12">
+              <label for="shippingType" class="form-label">Jenis Pengiriman</label>
+              <select id="shippingType" class="form-select" required>
+                <option value="">Pilih Pengiriman</option>
+                <option value="J&T">J&T</option>
+                <option value="JNE">JNE</option>
+                <option value="Grab">Grab</option>
+                <option value="Gojek">Gojek</option>
+              </select>
+            </div>
+
             <div class="col-12">
               <label for="street" class="form-label">Jalan</label>
               <input type="text" id="street" class="form-control" required>
@@ -134,6 +144,7 @@ const useDefaultCheckbox = document.getElementById('useDefaultAddress');
     document.getElementById('lastName').value = data.lastName || "";
     document.getElementById('phone').value = data.phone || "";
     document.getElementById('email').value = data.email || "";
+    document.getElementById('kelaminType').value = data.kelaminType || "";
     document.getElementById('shippingType').value = data.shippingType || "";
     document.getElementById('street').value = data.address?.street || "";
     document.getElementById('city').value = data.address?.city || "";
@@ -168,7 +179,8 @@ if (useDefaultCheckbox) {
 }
 
   } else {
-    showGlobalAlert("Silakan login dulu.");
+    console.error("❌ Silahkan Daftar / Login dulu");
+    showGlobalAlert("Silakan login / daftar dulu.");
     window.location.href = "/userLogin";
   }
 });
@@ -183,6 +195,7 @@ form.addEventListener('submit', async (e) => {
   const lastName = document.getElementById('lastName').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
+  const kelaminType = document.getElementById('kelaminType').value.trim();
   const shippingType = document.getElementById('shippingType').value.trim();
   
   const address = {
@@ -194,6 +207,7 @@ form.addEventListener('submit', async (e) => {
   };
 
   if (!currentUser) {
+    console.error("❌ Silahkan Daftar / Login dulu");
     showGlobalAlert("Silakan login terlebih dahulu.");
     return;
   }
@@ -208,6 +222,7 @@ const checkoutSpinner = document.getElementById('checkoutSpinner');
 	  const cartSnap = await getDocs(cartRef);
 
 	  if (cartSnap.empty) {
+    console.error("❌ Gagal: Keranjang masih kosong");
 		showGlobalAlert("Keranjang masih kosong, tidak bisa checkout.");
 		checkoutSpinner.style.display = "none";
 		return;
@@ -237,6 +252,7 @@ const checkoutSpinner = document.getElementById('checkoutSpinner');
 		lastName,
 		phone,
 		email,
+		kelaminType,
 		shippingType,
 		address,
 		cart: items,
