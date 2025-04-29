@@ -77,7 +77,7 @@ form.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
 
-  status.innerHTML = "🔄 Sedang login...";
+  status.innerHTML = "🔄 Proses login...";
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
