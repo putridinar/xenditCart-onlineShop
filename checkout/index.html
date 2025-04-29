@@ -107,7 +107,7 @@ permalink: /checkout
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, setDoc, updateDoc, collection, getDocs, addDoc,  getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // FIREBASE CONFIG
@@ -132,54 +132,56 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
     document.getElementById('email').value = user.email || "";
-	
-const docRef = doc(db, "users", user.uid);
-const snap = await getDoc(docRef);
-const addressFields = ['street', 'city', 'postalCode', 'province', 'country'];
-const useDefaultCheckbox = document.getElementById('useDefaultAddress');
-  
-  if (snap.exists()) {
-    const data = snap.data();
-    document.getElementById('firstName').value = data.firstName || "";
-    document.getElementById('lastName').value = data.lastName || "";
-    document.getElementById('phone').value = data.phone || "";
-    document.getElementById('email').value = data.email || "";
-    document.getElementById('kelaminType').value = data.kelaminType || "";
-    document.getElementById('shippingType').value = data.shippingType || "";
-    document.getElementById('street').value = data.address?.street || "";
-    document.getElementById('city').value = data.address?.city || "";
-    document.getElementById('postalCode').value = data.address?.postalCode || "";
-    document.getElementById('province').value = data.address?.province || "";
-    document.getElementById('country').value = data.address?.country || "";
-  }
-  
-if (useDefaultCheckbox) {
-  useDefaultCheckbox.addEventListener('change', async () => {
-    if (useDefaultCheckbox.checked && currentUser) {
-      const docRef = doc(db, "users", currentUser.uid);
+
+    const docRef = doc(db, "users", user.uid);
+    try {
       const snap = await getDoc(docRef);
+      const addressFields = ['street', 'city', 'postalCode', 'province', 'country'];
+      const useDefaultCheckbox = document.getElementById('useDefaultAddress');
 
       if (snap.exists()) {
-        const address = snap.data().address || {};
-        // Isi & disable field
-        addressFields.forEach(field => {
-          const el = document.getElementById(field);
-          el.value = address[field] || "";
-          el.setAttribute('readonly', 'readonly');
+        const data = snap.data();
+        document.getElementById('firstName').value = data.firstName || "";
+        document.getElementById('lastName').value = data.lastName || "";
+        document.getElementById('phone').value = data.phone || "";
+        document.getElementById('email').value = data.email || "";
+        document.getElementById('kelaminType').value = data.kelaminType || "";
+        document.getElementById('shippingType').value = data.shippingType || "";
+        document.getElementById('street').value = data.address?.street || "";
+        document.getElementById('city').value = data.address?.city || "";
+        document.getElementById('postalCode').value = data.address?.postalCode || "";
+        document.getElementById('province').value = data.address?.province || "";
+        document.getElementById('country').value = data.address?.country || "";
+      } else {
+        console.warn("⚠️ User login tanpa profile, lanjutkan saja.");
+      }
+
+      if (useDefaultCheckbox) {
+        useDefaultCheckbox.addEventListener('change', async () => {
+          if (useDefaultCheckbox.checked && currentUser) {
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            if (snap.exists()) {
+              const address = snap.data().address || {};
+              addressFields.forEach(field => {
+                const el = document.getElementById(field);
+                el.value = address[field] || "";
+                el.setAttribute('readonly', 'readonly');
+              });
+            }
+          } else {
+            addressFields.forEach(field => {
+              const el = document.getElementById(field);
+              el.removeAttribute('readonly');
+            });
+          }
         });
       }
-    } else {
-      // Hapus readonly & kosongkan
-      addressFields.forEach(field => {
-        const el = document.getElementById(field);
-        el.removeAttribute('readonly');
-      });
+    } catch (error) {
+      console.error("❌ Gagal mengambil data user:", error);
+      showGlobalAlert("Gagal mengambil data pengguna, coba lagi nanti.");
     }
-  });
-}
-
   } else {
-    console.error("❌ Tidak ada user yang login");
+    console.error("❌ Tidak ada user login");
     showGlobalAlert("Silakan login / daftar dulu.");
     setTimeout(() => {
       window.location.href = "/userLogin";
@@ -187,11 +189,17 @@ if (useDefaultCheckbox) {
   }
 });
 
-// HANDLE FORM
+// HANDLE FORM SUBMIT
 const form = document.getElementById('checkoutForm');
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const user = auth.currentUser;
+
+  if (!user) {
+    console.error("❌ Belum login");
+    showGlobalAlert("Silakan login terlebih dahulu.");
+    return;
+  }
 
   const firstName = document.getElementById('firstName').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
@@ -199,7 +207,7 @@ form.addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value.trim();
   const kelaminType = document.getElementById('kelaminType').value;
   const shippingType = document.getElementById('shippingType').value;
-  
+
   const address = {
     street: document.getElementById('street').value.trim(),
     city: document.getElementById('city').value.trim(),
@@ -208,96 +216,105 @@ form.addEventListener('submit', async (e) => {
     country: document.getElementById('country').value.trim()
   };
 
-  if (!currentUser) {
-    console.error("❌ Silahkan Daftar / Login dulu");
-    showGlobalAlert("Silakan login terlebih dahulu.");
-    return;
+  const checkoutSpinner = document.getElementById('checkoutSpinner');
+
+  try {
+    checkoutSpinner.style.display = "block";
+
+    // Update data USER ke Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      firstName,
+      lastName,
+      phone,
+      email,
+      kelaminType,
+      shippingType,
+      address
+    }, { merge: true });
+
+    // Ambil CART
+    const cartRef = collection(db, `carts/${user.uid}/items`);
+    const cartSnap = await getDocs(cartRef);
+
+    if (cartSnap.empty) {
+      console.error("❌ Keranjang kosong");
+      showGlobalAlert("Keranjang masih kosong, tidak bisa checkout.");
+      checkoutSpinner.style.display = "none";
+      return;
+    }
+
+    const items = [];
+    let totalAmount = 0;
+
+    cartSnap.forEach(docSnap => {
+      const item = docSnap.data();
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        color: item.color || "-",
+        size: item.size || "-"
+      });
+      totalAmount += item.price * item.quantity;
+    });
+
+    const external_id = "INV-" + Date.now();
+
+    const orderData = {
+      userId: user.uid,
+      external_id,
+      firstName,
+      lastName,
+      phone,
+      email,
+      kelaminType,
+      shippingType,
+      address,
+      cart: items,
+      totalAmount,
+      status: "pending",
+      createdAt: new Date().toISOString()
+    };
+
+    console.log("✅ Membuat order ID:", external_id);
+
+    // KIRIM DATA KE XENDIT
+    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        external_id: external_id,
+        amount: totalAmount,
+        buyerName: `${firstName} ${lastName}`,
+        buyerEmail: email,
+        buyerPhone: phone,
+        items: items
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.invoice_url) {
+      await setDoc(doc(db, "orders", external_id), {
+        ...orderData,
+        invoiceUrl: result.invoice_url
+      });
+
+      window.location.href = result.invoice_url;
+    } else {
+      throw new Error(result.message || "Gagal membuat invoice.");
+    }
+
+  } catch (error) {
+    console.error("❌ Gagal checkout:", error);
+    showGlobalAlert("Gagal checkout: " + error.message);
+  } finally {
+    checkoutSpinner.style.display = "none";
   }
-
-const checkoutSpinner = document.getElementById('checkoutSpinner');
-
-	try {
-	  checkoutSpinner.style.display = "block"; // 🔥 Tampilkan spinner
-
-	  // 🔥 AMBIL CART USER
-	  const cartRef = collection(db, `carts/${currentUser.uid}/items`);
-	  const cartSnap = await getDocs(cartRef);
-
-	  if (cartSnap.empty) {
-    console.error("❌ Gagal: Keranjang masih kosong");
-		showGlobalAlert("Keranjang masih kosong, tidak bisa checkout.");
-		checkoutSpinner.style.display = "none";
-		return;
-	  }
-
-	  const items = [];
-	  let totalAmount = 0;
-
-	  cartSnap.forEach(docSnap => {
-		const item = docSnap.data();
-		items.push({
-		  name: item.name,
-		  quantity: item.quantity,
-		  price: item.price,
-		  color: item.color || "-",
-		  size: item.size || "-"
-		});
-		totalAmount += item.price * item.quantity;
-	  });
-
-	  const external_id = "INV-" + Date.now();
-
-	  const orderData = {
-		userId: currentUser.uid,
-		external_id,
-		firstName,
-		lastName,
-		phone,
-		email,
-		kelaminType,
-		shippingType,
-		address,
-		cart: items,
-		totalAmount,
-		status: "pending",
-		createdAt: new Date().toISOString()
-	  };
-
-	  console.log("✅ Order berhasil dibuat dengan ID:", external_id);
-
-	  // 🔥 KIRIM KE XENDIT
-	  const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-		  external_id: external_id,
-		  amount: totalAmount,
-		  buyerName: `${firstName} ${lastName}`,
-		  buyerEmail: email,
-		  buyerPhone: phone,
-		  items: items
-		})
-	  });
-
-	  const result = await response.json();
-
-	  if (result.invoice_url) {
-		// 🔥 Simpan dengan invoiceUrl dari Xendit
-		await setDoc(doc(db, "orders", external_id), {
-		  ...orderData,
-		  invoiceUrl: result.invoice_url
-		});
-
-		window.location.href = result.invoice_url;
-	  } else {
-		throw new Error(result.message || "Gagal membuat invoice.");
-	  }
-
-	} catch (error) {
-	  console.error("❌ Gagal checkout:", error);
-	  showGlobalAlert("❌ Gagal checkout: " + error.message);
-	} finally {
-	  checkoutSpinner.style.display = "none"; // 🔥 Sembunyikan spinner
-	}
 });
+
+// GLOBAL ALERT SIMPLE
+function showGlobalAlert(message) {
+  alert(message);
+}
 </script>
