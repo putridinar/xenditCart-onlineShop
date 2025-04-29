@@ -179,9 +179,11 @@ if (useDefaultCheckbox) {
 }
 
   } else {
-    console.error("❌ Silahkan Daftar / Login dulu");
+    console.error("❌ Tidak ada user yang login");
     showGlobalAlert("Silakan login / daftar dulu.");
-    window.location.href = "/userLogin";
+    setTimeout(() => {
+      window.location.href = "/userLogin";
+    }, 1000);
   }
 });
 
@@ -195,8 +197,8 @@ form.addEventListener('submit', async (e) => {
   const lastName = document.getElementById('lastName').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const email = document.getElementById('email').value.trim();
-  const kelaminType = document.getElementById('kelaminType').value.trim();
-  const shippingType = document.getElementById('shippingType').value.trim();
+  const kelaminType = document.getElementById('kelaminType').value;
+  const shippingType = document.getElementById('shippingType').value;
   
   const address = {
     street: document.getElementById('street').value.trim(),
