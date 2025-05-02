@@ -12,9 +12,9 @@ permalink: /allProduct
 
     <!-- 🔥 Search & Filter -->
     <div class="row mb-4">
-      <div class="col-12 col-md-6 mb-2">
-        <input type="text" class="form-control" id="searchInput" placeholder="Cari produk...">
-      </div>
+		<div id="searchBarWrapper" class="col-12 col-md-6 mb-2">
+		  <input type="text" class="form-control" id="searchInput" placeholder="Cari produk...">
+		</div>
       <div class="col-6 col-md-3 mb-2">
         <select class="form-select" id="filterCategory">
           <option value="">Semua Kategori</option>
@@ -47,6 +47,18 @@ permalink: /allProduct
     </div>
   </div>
 </section>
+<script>
+  window.addEventListener("scroll", function() {
+    var searchBar = document.getElementById("searchBarWrapper");
+    var stickyOffset = searchBar.offsetTop;
+
+    if (window.pageYOffset > stickyOffset) {
+      searchBar.classList.add("sticky");
+    } else {
+      searchBar.classList.remove("sticky");
+    }
+  });
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";

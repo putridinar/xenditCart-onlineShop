@@ -84,3 +84,16 @@
     color: #555;
   }
 }
+.col-12.col-md-6.mb-2.sticky {
+  position: fixed;
+  max-width: 558px;
+  width: 100%;
+  top: 68px;
+  left: 115px;
+  right: 0;
+  z-index: 1000;
+	@include mobile {
+		left: 0;
+        padding: 0 20px;
+	}
+}
