@@ -37,7 +37,7 @@ permalink: /product
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, onSnapshot, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 🔥 Firebase Config
@@ -82,10 +82,20 @@ async function loadProduct() {
     if (!docSnap.exists()) return;
 
     importProduct = docSnap.data();
+    // Real-time update stok
+const productRef = doc(db, "products", id);
+onSnapshot(productRef, (docSnap) => {
+  if (docSnap.exists()) {
+    const updatedStock = docSnap.data().stock;
+    const stockBadge = document.querySelector('.badge.bg-success');
+    if (stockBadge) stockBadge.textContent = `${updatedStock} pcs`;
+  }
+});
+
     renderProductDetail(importProduct); // 🔥 Ini render ratingForm
 
     setupInteractions(); // tombol warna / size
-    setupRating();        // 🔥 BARU SEKARANG dipanggil setelah render
+    setupRating();        // 🔥 BARU panggil setelah render
 
   } catch (error) {
     console.error("❌ Error load product:", error);
@@ -118,7 +128,13 @@ function renderProductDetail(product) {
             ${[1, 2, 3, 4, 5].map(num => `<i class='bi bi-star text-muted fs-4 star-rate' data-star='${num}' style='cursor:pointer;'></i>`).join('')}
           </div>
         </div>
-        <p id="ratingMessage" class="text-success mb-3 small"></p>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted">Stok:</span>
+            <span class="badge bg-success">${product.stock} pcs</span>
+          </div>
+        <span id="ratingMessage" class="text-success small text-end" style="margin: 0;"></span>
+        </div>
         <p class="text-muted lh-lg">${product.description || 'Deskripsi belum tersedia.'}</p>
 
         <hr class="my-4">
@@ -127,13 +143,13 @@ function renderProductDetail(product) {
           <h6 class="fw-semibold">Pilih Warna:</h6>
           <div id="colorOptions" class="d-flex flex-wrap gap-2">${warnaButtons}</div>
         </div>
-
+<div class="d-flex align-items-center justify-content-between mb-3">
         <div class="mb-3">
           <h6 class="fw-semibold">Pilih Ukuran:</h6>
           <div id="sizeOptions" class="d-flex flex-wrap gap-2">${ukuranButtons}</div>
         </div>
 
-        <div class="mb-4">
+        <div class="mb-3">
           <h6 class="fw-semibold">Jumlah:</h6>
           <div class="d-flex align-items-center">
             <button class="btn btn-outline-secondary px-3" id="decreaseQty">−</button>
@@ -141,7 +157,7 @@ function renderProductDetail(product) {
             <button class="btn btn-outline-secondary px-3" id="increaseQty">+</button>
           </div>
         </div>
-
+</div>
         <div class="d-flex gap-3">
 			<button id="checkoutButton" class="btn btn-danger flex-grow-1 py-2 shadow-sm" type="button">
 				<span class="spinner-border spinner-border-sm me-2 d-none" id="checkoutSpinner" role="status" aria-hidden="true"></span>
@@ -308,6 +324,7 @@ function setupInteractions() {
       return;
     }
     addToCartFirestore({
+      productId: productId,
       name: importProduct.name,
       price: importProduct.price,
       image: importProduct.image,
@@ -428,15 +445,38 @@ async function addToCartFirestore(item) {
     const q = query(cartRef, where("name", "==", item.name), where("color", "==", item.color), where("size", "==", item.size));
     const snapshot = await getDocs(q);
 
+    const itemWithId = { ...item, productId: id }; // 🆕 Tambahkan productId
+
     if (snapshot.empty) {
-      await addDoc(cartRef, item);
+      await addDoc(cartRef, itemWithId);
       showToast("✅ Produk ditambahkan ke keranjang!", "success");
+
+      // Kurangi stok
+      const productRef = doc(db, "products", id);
+      const productSnap = await getDoc(productRef);
+      if (productSnap.exists()) {
+        const currentStock = productSnap.data().stock || 0;
+        await updateDoc(productRef, {
+          stock: currentStock - item.quantity
+        });
+      }
+
     } else {
       snapshot.forEach(async docSnap => {
         await updateDoc(doc(db, `carts/${currentUser.uid}/items/${docSnap.id}`), {
           quantity: docSnap.data().quantity + item.quantity
         });
         showToast("✅ Jumlah produk di keranjang diperbarui!", "success");
+
+        // Kurangi stok
+        const productRef = doc(db, "products", id);
+        const productSnap = await getDoc(productRef);
+        if (productSnap.exists()) {
+          const currentStock = productSnap.data().stock || 0;
+          await updateDoc(productRef, {
+            stock: currentStock - item.quantity
+          });
+        }
       });
     }
   } catch (error) {

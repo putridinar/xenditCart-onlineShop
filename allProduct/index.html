@@ -62,7 +62,8 @@ permalink: /allProduct
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, deleteDoc, doc, setDoc, getDoc, getDocs, query, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "{{site.api_key}}",
@@ -75,7 +76,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+let currentUser = null;
+
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  if (user) checkLikedStatus();
+});
 
 const productsGrid = document.getElementById("productsGrid");
 const searchInput = document.getElementById("searchInput");
@@ -111,20 +123,24 @@ function renderProducts(initial = true) {
     if (!document.getElementById(`product-${product.id}`)) {
       productsGrid.innerHTML += `
 <div class="col-6 col-md-4 col-lg-3 mb-4" id="product-${product.id}">
-  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden hover-card">
-    <!-- Badge -->
-    ${product.isNew || product.discount ? `
-      <div class="position-absolute top-0 start-0 m-2 z-2">
-        <span class="badge ${product.isNew ? 'bg-success' : 'bg-danger'} rounded-pill px-3 py-1 shadow-sm">
-          ${product.isNew ? 'Baru' : 'Diskon'}
-        </span>
+  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden hover-card ${product.stock <= 0 ? 'out-of-stock' : ''}">
+      <!-- Badge -->
+      <div class="position-absolute top-0 end-0 m-2 z-2 d-flex flex-column gap-1">
+        ${product.stock <= 0 ? `
+          <span class="badge bg-danger rounded-pill px-3 py-1 shadow-sm">Stok Habis</span>
+        ` : ''}
+        ${product.isNew ? `
+          <span class="badge bg-success rounded-pill px-3 py-1 shadow-sm">Baru</span>
+        ` : ''}
+        ${product.discount ? `
+          <span class="badge bg-peimary rounded-pill px-3 py-1 shadow-sm">Diskon</span>
+        ` : ''}
       </div>
-    ` : ''}
 
     <!-- Gambar -->
     <div class="bg-light ratio ratio-1x1 rounded-top overflow-hidden">
       <img src="${product.image}" alt="${product.name}" class="img-fluid object-fit-cover transition-scale w-100 h-100">
-      <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle shadow like-btn" title="Suka" style="width:40px;height:40px;">
+      <button id="likeButton" class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle shadow like-btn" title="Suka" style="width:40px;height:40px;">
         <i class="bi bi-heart"></i>
       </button>
     </div>
@@ -141,8 +157,18 @@ function renderProducts(initial = true) {
     </div>
   </div>
 </div>
-
       `;
+
+      setTimeout(() => {
+  const likeBtn = document.querySelector(`#product-${product.id} #likeButton`);
+  if (likeBtn) {
+    likeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Supaya tidak mengganggu link "stretched"
+      toggleLikeProduct(product.id, likeBtn); // ✅ Kirim productId dan btnElement
+    });
+  }
+}, 0);
+
     }
   });
 
@@ -150,6 +176,65 @@ function renderProducts(initial = true) {
     noMoreProducts.classList.remove("d-none");
   } else {
     noMoreProducts.classList.add("d-none");
+  }
+}
+      
+productsGrid.addEventListener("click", (e) => {
+  const likeBtn = e.target.closest(".like-btn");
+  if (!likeBtn) return;
+
+  const productCard = likeBtn.closest("[id^='product-']");
+  if (!productCard) return;
+
+  const productId = productCard.id.replace("product-", "");
+  toggleLikeProduct(productId, likeBtn);
+});
+
+// 🔥 Like / Unlike Produk
+async function toggleLikeProduct(productId, btnElement) {
+  if (!currentUser) {
+    showToast("Silakan login untuk like produk ini!", "warning");
+    return;
+  }
+
+  const likeRef = doc(db, `likes/${currentUser.uid}/products/${productId}`);
+  const likeSnap = await getDoc(likeRef);
+
+  if (likeSnap.exists()) {
+    await deleteDoc(likeRef);
+    setLikedUI(btnElement, false);
+    showToast("Produk dihapus dari daftar suka", "warning");
+  } else {
+    await setDoc(likeRef, { liked: true });
+    setLikedUI(btnElement, true);
+    showToast("Produk ditambahkan ke daftar suka", "success");
+  }
+}
+
+
+// 🔥 Cek Apakah Produk Sudah Dilike
+async function checkLikedStatus() {
+  if (!currentUser) return;
+
+  const likeCollection = collection(db, `likes/${currentUser.uid}/products`);
+  const likeSnapshot = await getDocs(likeCollection);
+  const likedProductIds = likeSnapshot.docs.map(doc => doc.id);
+
+  likedProductIds.forEach(id => {
+    const btn = document.querySelector(`#product-${id} .like-btn`);
+    if (btn) setLikedUI(btn, true);
+  });
+}
+
+// 🔥 Update UI Tombol Like
+function setLikedUI(btn, isLiked) {
+  const icon = btn.querySelector("i");
+  btn.classList.toggle("btn-outline-danger", isLiked);
+  btn.classList.toggle("btn-danger", !isLiked);
+  if (isLiked) {
+    icon.classList.replace("bi-heart", "bi-heart-fill");
+  } else {
+    icon.classList.replace("bi-heart-fill", "bi-heart");
   }
 }
 
@@ -251,5 +336,20 @@ document.addEventListener("DOMContentLoaded", loadProducts);
 .like-btn:hover {
   background-color: rgba(255, 0, 0, 0.1);
   color: #dc3545;
+}
+
+.card.out-of-stock::after {
+  content: "STOK HABIS";
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 8px;
+  z-index: 10;
 }
 </style>

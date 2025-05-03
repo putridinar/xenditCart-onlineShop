@@ -157,7 +157,13 @@
     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body d-flex flex-column">
-    <div id="cartItems" class="flex-grow-1 overflow-auto">
+    <div id="loginSection" class="text-center my-5 d-none">
+      <p>Untuk melihat keranjang, silakan login terlebih dahulu:</p>
+      <button id="googleLoginButton" class="btn btn-danger">
+        <i class="bi bi-google me-2"></i> Login dengan Google
+      </button>
+    </div>
+      <div id="cartItems" class="flex-grow-1 overflow-auto">
       <!-- List produk akan muncul disini -->
     </div>
 	<div class="mt-3" id="checkoutSection" style="display:none;">
@@ -171,8 +177,8 @@
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, onSnapshot, collection, getDocs, deleteDoc, doc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, onSnapshot, collection, getDocs, updateDoc, deleteDoc, doc, addDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "{{site.api_key}}",
@@ -189,6 +195,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const logoutBtn = document.getElementById('logoutBtn');
+const loginSection = document.getElementById("loginSection");
 const dropProfile = document.getElementById('dropProfile');
 const mimIn = document.getElementById('mimi-in');
 const authLink = document.getElementById('authLink');
@@ -239,9 +246,27 @@ if (cartCountEl) {
     }
   });
 }
-
 });
 
+    // Tombol login Google
+    googleLoginButton.addEventListener("click", async () => {
+        
+        // ✅ Tutup offcanvas
+        const offcanvasEl = document.getElementById("cartCanvas");
+        const offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasEl) 
+                              || new bootstrap.Offcanvas(offcanvasEl);
+        offcanvasInstance.hide();
+    
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error("❌ Gagal login:", error);
+        showGlobalAlert("Gagal login dengan Google: " + error.message);
+      }
+    });
+
+// Tombol logout
 logoutBtn.addEventListener('click', () => {
   signOut(auth)
     .then(() => {
@@ -273,6 +298,7 @@ onAuthStateChanged(auth, (user) => {
         });
       });
     currentUser = user;
+    loginSection.classList.add("d-none");
     checkoutSection.style.display = 'block'; // 🔥 TAMPILKAN
     dropProfile.style.display = "inline-block";
     mimIn.style.display = 'none';
@@ -283,6 +309,7 @@ onAuthStateChanged(auth, (user) => {
       img.src = user.photoURL || "https://ionicframework.com/docs/img/demos/avatar.svg";
   } else {
     currentUser = null;
+    loginSection.classList.remove("d-none");
     checkoutSection.style.display = 'none'; // 🔥 SEMBUNYIKAN
     dropProfile.style.display = "none";
     mimIn.style.display = 'inline-block';
@@ -341,9 +368,13 @@ async function renderCart() {
 			<div class="fw-bold text-primary">Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</div>
 		  </div>
 
-		  <button class="btn btn-sm btn-light border-0 rounded-circle shadow-sm text-danger position-absolute top-0 end-0 m-2" onclick="removeCartItem('${itemId}')">
-			<i class="bi bi-x-lg"></i>
-		  </button>
+      <button
+        class="btn btn-sm btn-light border-0 rounded-circle shadow-sm text-danger position-absolute top-0 end-0 m-2 remove-cart-btn"
+        data-item-id="${itemId}"
+        data-product-id="${item.productId}"
+        data-item-data='${JSON.stringify(item)}'>
+        <i class="bi bi-x-lg"></i>
+      </button>
 		</div>
 
       `;
@@ -351,7 +382,7 @@ async function renderCart() {
 
     // 🛒 Render ke DOM
     cartItemsEl.innerHTML = snapshot.empty
-      ? `<p class="text-center text-muted">Keranjang kosong.</p>`
+      ? `<p class="text-center text-muted color-danger">Keranjang kosong.</p>`
       : cartHTML;
 
     // 🔥 Update Cart Counter
@@ -376,17 +407,33 @@ async function renderCart() {
   }
 }
 
-// Fungsi hapus item dari keranjang
-window.removeCartItem = async function(itemId) {
+// 🔥 Hapus dari keranjang dan kembalikan stok
+window.removeCartItem = async function(itemId, itemData, productId) {
   if (!currentUser) return;
+
+  if (!productId) {
+    console.error("Product ID tidak ditemukan!", itemId, itemData);
+    showToast("❌ Gagal hapus item: ID produk tidak ada!", "danger");
+    return;
+  }
 
   try {
     await deleteDoc(doc(db, `carts/${currentUser.uid}/items/${itemId}`));
-    showCartToast("🗑️ Item dihapus dari keranjang!", "danger");
+
+    const productRef = doc(db, "products", productId);
+    const productSnap = await getDoc(productRef);
+    if (productSnap.exists()) {
+      const currentStock = productSnap.data().stock || 0;
+      await updateDoc(productRef, {
+        stock: currentStock + itemData.quantity
+      });
+    }
+
+    showToast("Item dihapus & stok dikembalikan", "success");
     renderCart(); // Refresh setelah hapus
   } catch (error) {
     console.error('Error hapus item:', error);
-    showCartToast("❌ Gagal hapus item!", "warning");
+    showToast("❌ Gagal hapus item!", "warning");
   }
 }
 
@@ -397,7 +444,28 @@ if (cartOffcanvas) {
     renderCart();
   });
 }
+
+// 🧠 Delegasi event klik tombol hapus
+document.getElementById('cartItems').addEventListener('click', async function(e) {
+  const button = e.target.closest('.remove-cart-btn');
+  if (!button) return;
+
+  const itemId = button.dataset.itemId;
+  const productId = button.dataset.productId;
+  let itemData;
+
+  try {
+    itemData = JSON.parse(button.dataset.itemData);
+  } catch (err) {
+    console.error("Gagal parsing itemData:", err);
+    showToast("❌ Gagal hapus item!", "danger");
+    return;
+  }
+
+  await removeCartItem(itemId, itemData, productId);
+});
 </script>
+
 <script>
 function goCheckout() {
   window.location.href = "/checkout";
