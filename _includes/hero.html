@@ -1,9 +1,9 @@
-<section class="hero-section mb-5 text-white d-flex align-items-center justify-content-center" style="height: 100vh; font-family: 'Poppins', sans-serif;">
-  <div class="container text-center">
+<section class="hero-section text-white d-flex align-items-center justify-content-center" style="height: 100vh; font-family: 'Poppins', sans-serif;">
+  <div class="container text-center" data-aos="zoom-in">
     <div class="glass p-4 p-md-5 rounded-4 shadow-lg">
       <h1 class="display-4 fw-bold mb-3">Temukan Gaya Terbaikmu</h1>
       <p class="lead mb-4">{{site.description}}</p>
-      <a href="/allProduct" class="btn btn-primary btn-lg px-5 py-3 shadow glowing-btn">Belanja Sekarang</a>
+      <a href="/allProduct" class="btn btn-primary btn-lg px-5 py-3 shadow glowing-btn" data-aos="fade-up" data-aos-delay="500">Belanja Sekarang</a>
     </div>
   </div>
 		<span style="position:fixed;top:63px;right:10px;z-index:5;">{% if layout.xendit_options == "live" %}<span class="badge bg-danger rounded blink">🟠 staging mode</span>{% elsif layout.xendit_options == "test" %}<span class="badge bg-warning rounded blink">🟠</span> {{site.test_mode}}{% endif %}</span>

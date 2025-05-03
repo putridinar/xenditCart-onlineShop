@@ -4,7 +4,7 @@ title: Semua Produk
 permalink: /allProduct
 ---
 
-<section class="py-5">
+<section class="py-2">
   <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="mb-0">Semua Produk</h2>
@@ -12,10 +12,10 @@ permalink: /allProduct
 
     <!-- 🔥 Search & Filter -->
     <div class="row mb-4">
-		<div id="searchBarWrapper" class="col-12 col-md-6 mb-2">
+		<div id="searchBarWrapper" class="col-12 col-md-6 mb-2" data-aos="fade-right" data-aos-delay="500">
 		  <input type="text" class="form-control" id="searchInput" placeholder="Cari produk...">
 		</div>
-      <div class="col-6 col-md-3 mb-2">
+      <div class="col-6 col-md-3 mb-2" data-aos="flip-down" data-aos-delay="500">
         <select class="form-select" id="filterCategory">
           <option value="">Semua Kategori</option>
           <option value="Baju">Baju</option>
@@ -24,7 +24,7 @@ permalink: /allProduct
           <option value="Aksesoris">Aksesoris</option>
         </select>
       </div>
-      <div class="col-6 col-md-3 mb-2">
+      <div class="col-6 col-md-3 mb-2" data-aos="fade-left" data-aos-delay="500">
         <select class="form-select" id="sortPrice">
           <option value="">Urutkan Harga</option>
           <option value="asc">Harga Termurah</option>
@@ -123,7 +123,7 @@ function renderProducts(initial = true) {
     if (!document.getElementById(`product-${product.id}`)) {
       productsGrid.innerHTML += `
 <div class="col-6 col-md-4 col-lg-3 mb-4" id="product-${product.id}">
-  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden hover-card ${product.stock <= 0 ? 'out-of-stock' : ''}">
+  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden hover-card ${product.stock <= 0 ? 'out-of-stock' : ''}" data-aos="flip-left" data-aos-delay="200" data-aos-duration="500" data-aos-easing="ease-in-out">
       <!-- Badge -->
       <div class="position-absolute top-0 end-0 m-2 z-2 d-flex flex-column gap-1">
         ${product.stock <= 0 ? `
