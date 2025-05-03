@@ -38,8 +38,8 @@ permalink: /success
   </div>
 </div>
 
-<div id="successContainer" class="text-center my-5" style="display:none;">
-  <div class="card shadow p-4 border-success border-2 animate__animated animate__fadeInDown" style="max-width: 500px; margin: 0 auto;">
+<div id="successContainer" class="text-center my-5" style="margin-top:-85px !important; display:none;">
+  <div class="card shadow p-4 border-success border-2 animate__animated animate__fadeInDown" style="max-width: 500px; margin: 0 15px;">
     <div class="text-success mb-3" style="font-size: 4rem;">
       <i class="bi bi-check-circle-fill"></i>
     </div>
@@ -106,7 +106,7 @@ document.getElementById("successContainer").style.display = "block";
 startConfetti();
 
 // 🔁 Auto redirect ke homepage
-let countdown = 10;
+let countdown = 5;
 const countdownEl = document.getElementById("countdown");
 const timer = setInterval(() => {
   countdown--;

@@ -6,22 +6,26 @@ description: Temukan promo spesial kami untuk produk-produk terbaik. Dapatkan pe
 ---
 
 <style>
-.hero {
+  .hero {
+  min-height: 60vh; /* Cukup tinggi, tidak terlalu besar di mobile */
   background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-              url('https://source.unsplash.com/1600x900/?luxury') no-repeat center center;
-  background-size: cover;
-  color: white;
-  padding: 120px 0;
-  text-align: center;
+              url('/assets/images/promotion-banner.png') center/cover no-repeat;
 }
-.hero h1 {
-  font-size: 3.5rem;
-  font-weight: 700;
-}
-.hero p {
-  font-size: 1.25rem;
-  max-width: 600px;
-  margin: auto;
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: 50vh;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
 }
 
 .section-title {
@@ -39,67 +43,89 @@ description: Temukan promo spesial kami untuk produk-produk terbaik. Dapatkan pe
 .card-custom:hover {
   transform: translateY(-5px);
 }
+.card i {
+  font-size: 3rem;
+}
+
+@media (max-width: 576px) {
+  .card i {
+    font-size: 2rem;
+  }
+  body {
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+  }
+}
 </style>
 
-<div class="hero">
-  <div class="container">
-    <h1 data-aos="fade-down">Promo Eksklusif untuk Anda</h1>
-    <p data-aos="fade-up" data-aos-delay="200">Nikmati penawaran terbaik kami — hanya untuk waktu terbatas!</p>
-    <a href="#fitur" class="btn btn-light btn-lg mt-4" data-aos="zoom-in" data-aos-delay="400">Lihat Promo</a>
-  </div>
-</div>
 
-<section id="fitur" class="py-5 bg-light">
-  <div class="container">
-    <h2 class="section-title" data-aos="fade-up">Kenapa Memilih Kami?</h2>
-    <div class="row g-4">
-      <div class="col-md-4" data-aos="fade-right">
-        <div class="card card-custom h-100 text-center p-4">
-          <div class="card-body">
-            <i class="bi bi-gem fs-1 text-primary mb-3"></i>
-            <h5 class="card-title">Premium Quality</h5>
-            <p class="card-text">Produk eksklusif dengan kualitas terbaik di kelasnya.</p>
+<div class="container-fluid px-0">
+  <div class="hero bg-dark text-white text-center d-flex">
+    <div class="container px-4 px-md-5 py-5">
+      <h1 data-aos="fade-down" class="display-5 display-md-4 fw-bold">
+        Promo Eksklusif untuk Anda
+      </h1>
+      <p data-aos="fade-up" data-aos-delay="200" class="lead mt-3">
+        Nikmati penawaran terbaik kami — hanya untuk waktu terbatas!
+      </p>
+      <a href="#fitur" class="btn btn-light btn-lg mt-4 zoom-in" data-aos-delay="400">
+        Lihat Promo
+      </a>
+    </div>
+  </div>
+  <div class="py-5 bg-light">
+    <div class="container">
+      <h2 class="section-title" data-aos="fade-up">Kenapa Memilih Kami?</h2>
+      <div class="row g-4">
+        <div class="col-md-4" data-aos="flip-down">
+          <div class="card card-custom h-100 text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-gem fs-1 text-primary mb-3"></i>
+              <h5 class="card-title">Premium Quality</h5>
+              <p class="card-text">Produk eksklusif dengan kualitas terbaik di kelasnya.</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-4" data-aos="fade-up">
-        <div class="card card-custom h-100 text-center p-4">
-          <div class="card-body">
-            <i class="bi bi-clock-history fs-1 text-primary mb-3"></i>
-            <h5 class="card-title">Layanan Cepat</h5>
-            <p class="card-text">Respon dan pengiriman dalam hitungan jam.</p>
+        <div class="col-md-4" data-aos="zoom-in">
+          <div class="card card-custom h-100 text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-clock-history fs-1 text-primary mb-3"></i>
+              <h5 class="card-title">Layanan Cepat</h5>
+              <p class="card-text">Respon dan pengiriman dalam hitungan jam.</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-md-4" data-aos="fade-left">
-        <div class="card card-custom h-100 text-center p-4">
-          <div class="card-body">
-            <i class="bi bi-shield-check fs-1 text-primary mb-3"></i>
-            <h5 class="card-title">Garansi 100%</h5>
-            <p class="card-text">Uang kembali jika tidak puas dengan layanan kami.</p>
+        <div class="col-md-4" data-aos="fade-down">
+          <div class="card card-custom h-100 text-center p-4">
+            <div class="card-body">
+              <i class="bi bi-shield-check fs-1 text-primary mb-3"></i>
+              <h5 class="card-title">Garansi 100%</h5>
+              <p class="card-text">Uang kembali jika tidak puas dengan layanan kami.</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
-
-<section class="py-5">
-  <div class="container">
-    <h2 class="section-title" data-aos="fade-up">Testimoni Pelanggan</h2>
-    <div class="row">
-      <div class="col-md-6" data-aos="fade-right">
-        <blockquote class="blockquote">
-          <p class="mb-0">"Layanan terbaik yang pernah saya alami. Sangat direkomendasikan!"</p>
-          <footer class="blockquote-footer mt-2">Andi Rahmat</footer>
-        </blockquote>
-      </div>
-      <div class="col-md-6" data-aos="fade-left">
-        <blockquote class="blockquote">
-          <p class="mb-0">"Produk berkualitas dan pengiriman super cepat. Saya sangat puas."</p>
-          <footer class="blockquote-footer mt-2">Siti Halimah</footer>
-        </blockquote>
+  
+  <div class="py-5">
+    <div class="container">
+      <h2 class="section-title" data-aos="fade-up">Testimoni Pelanggan</h2>
+      <div class="row">
+        <div class="col-md-6" data-aos="fade-right">
+          <blockquote class="blockquote">
+            <p class="mb-0">"Layanan terbaik yang pernah saya alami. Sangat direkomendasikan!"</p>
+            <footer class="blockquote-footer mt-2">Andi Rahmat</footer>
+          </blockquote>
+        </div>
+        <div class="col-md-6" data-aos="fade-left">
+          <blockquote class="blockquote">
+            <p class="mb-0">"Produk berkualitas dan pengiriman super cepat. Saya sangat puas."</p>
+            <footer class="blockquote-footer mt-2">Siti Halimah</footer>
+          </blockquote>
+        </div>
       </div>
     </div>
   </div>
-</section>
+  </div>
