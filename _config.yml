@@ -35,7 +35,8 @@ version: v2.0.1
 
 sass:
   sass_dir: assets/scss
-  style: :compressed 
+  style: :compressed
+
 
 plugins:
   - jekyll-feed
@@ -43,6 +44,8 @@ plugins:
   - jekyll-archives
   - jekyll-paginate
   - dotenv
+
+plugins_dir: _plugins
 
 # Xendit Defaults
 xendit_options:
@@ -74,25 +77,9 @@ jekyll-archives:
     
 # HTML Compression
 # - http://jch.penibelst.de/
-compress_html:
-  clippings: all
-  ignore:
-    envs: development
     
 exclude:
     - Gemfile
     - Gemfile.lock
     - LICENSE
     - README.md
-
-live_url: https://xendit-app.putridinar.workers.dev
-test_url: https://xendittest-app.putridinar.workers.dev
-api_key: AIzaSyDN2dgu-Sdsc9K5fermxPFwDUiCzX71ce8
-auth_domain: tokoputridinar.firebaseapp.com
-project_id: tokoputridinar
-storage_bucket: tokoputridinar.firebasestorage.app
-sender_id: 747234240117
-app_id: 1:747234240117:web:a87af4f6724ab87ad23a3c
-measure_id: G-M2JGJH3NVQ
-chat_id: 1903170022
-bot_token: 5323538027:AAEKFXTpY40G1PKSrFsKzTDVeR4joDsXR9I

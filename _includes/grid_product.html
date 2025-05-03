@@ -1,4 +1,4 @@
-<div class="product-grid" id="productGrid">
+<div class="product-grid container" id="productGrid">
   <div class="loading">{% include spiner.html %}</div>
 </div>
 <style>
@@ -49,12 +49,7 @@ async function fetchAndRenderProducts() {
     querySnapshot.forEach(doc => {
       const data = doc.data();
       grid.innerHTML += `
-<div class="card position-relative shadow-sm border-0 rounded-4 overflow-hidden tilt-card"
-     data-tilt
-     data-tilt-max="15"
-     data-tilt-speed="400"
-     data-tilt-glare="true"
-     data-tilt-max-glare="0.3" data-aos="flip-up" data-aos-delay="500" data-aos-easing="linear">
+<div class="card position-relative shadow-sm border-0 rounded-4 overflow-hidden tilt-card" data-aos="flip-up" data-aos-delay="300" data-aos-easing="ease-in-sine">
   
   <!-- Tombol Favorit di pojok atas -->
   <button id="likeButton" class="btn btn-light position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" style="z-index: 10;">
@@ -62,7 +57,7 @@ async function fetchAndRenderProducts() {
   </button>
 
   <!-- Gambar Produk -->
-  <img class="card-img-top" src="${data.image}" alt="${data.name}" style="object-fit: cover; height: 250px;">
+  <img class="card-img-top" src="${data.image}" alt="${data.name}" style="object-fit: cover; height: 250px;" data-aos="zoom-in" data-aos-delay="200" data-aos-easing="ease-in-sine">
 
   <!-- Isi Card -->
   <div class="card-body text-center">
