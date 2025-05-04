@@ -286,6 +286,24 @@ onAuthStateChanged(auth, (user) => {
     console.warn("⚠️ Belum login, rating disable.");
   }
 });
+
+function disableButtonsIfOutOfStock(stock) {
+  const addToCartButton = document.getElementById('addToCartButton');
+  const increaseQtyButton = document.getElementById('increaseQty');
+  const quantityInput = document.getElementById('quantityInput');
+
+  if (stock <= 0) {
+    addToCartButton.disabled = true;
+    increaseQtyButton.disabled = true;
+    quantityInput.value = 0;
+    showToast("⚠️ Stok habis. Produk tidak bisa dibeli.", "warning");
+  } else {
+    addToCartButton.disabled = false;
+    increaseQtyButton.disabled = false;
+    quantityInput.value = 1;
+  }
+}
+
 // 🔥 Setup Semua Interaksi
 function setupInteractions() {
   document.querySelectorAll('.color-btn').forEach(btn => {
@@ -545,5 +563,17 @@ console.log("🔍 Cek Elemen:", document.getElementById('rating_form'));
 
 // 🚀 Mulai
 loadProduct();
+
+// ✅ Panggil saat DOM sudah siap dan data produk sudah diambil
+document.addEventListener("DOMContentLoaded", () => {
+  setupInteractions();
+  setupRating();
+
+  if (importProduct && typeof importProduct.stock === 'number') {
+    disableButtonsIfOutOfStock(importProduct.stock);
+  } else {
+    console.warn("⚠️ Data stok tidak ditemukan, tombol tidak akan dinonaktifkan.");
+  }
+});
 </script>
 

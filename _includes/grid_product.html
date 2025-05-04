@@ -6,6 +6,38 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   will-change: transform;
 }
+
+.like-btn {
+	background-color: #ff4d4dc2;
+	color: white;
+	border: none;
+	padding: 2px 12px;
+	font-size: 14px;
+	border-radius: 25px;
+	cursor: pointer;
+	display: flex;
+	gap: 5px;
+	align-items: center;
+	transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.like-btn:hover {
+	background-color: #ff1a1a;
+	transform: scale(1.1);
+}
+
+.like-btn:active {
+	transform: scale(0.95);
+}
+
+.like-icon {
+	margin-right: 0px;
+}
+
+.like-count {
+	font-size: 14px;
+	font-weight: bold;
+}
 </style>
 <script type="module">
 import {
@@ -79,10 +111,10 @@ async function fetchAndRenderProducts(user) {
     card.setAttribute("data-aos-delay", "100");
 
     card.innerHTML = `
-      <button class="btn ${isLiked ? 'btn-danger' : 'btn-light'} position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" data-id="${productId}">
-        <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-      </button>
-      <small class="position-absolute top-0 end-0 mt-5 me-3 text-muted like-count" data-id="${productId}">0</small>
+    <button class="like-btn ${isLiked ? 'btn-danger' : 'btn-light'} position-absolute top-0 end-0 m-2 shadow-sm like-btn" data-id="${productId}">
+        <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'} like-icon"></i>
+        <span class="like-count" data-id="${productId}">100</span>
+    </button>
 
       <img class="card-img-top" src="${data.image}" alt="${data.name}" style="object-fit: cover; height: 250px;">
       <div class="card-body text-center">
