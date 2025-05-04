@@ -73,7 +73,7 @@ async function loadOrderDetail() {
       const tombolBayar = (order.status === "pending" && order.invoiceUrl)
         ? `<div class="text-end mt-4">
              <a href="${order.invoiceUrl}" class="btn btn-primary btn-sm shadow-sm">
-               🔁 Checkout & Bayar
+               🔁 Bayar
              </a>
            </div>`
         : "";

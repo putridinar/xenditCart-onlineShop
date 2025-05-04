@@ -153,7 +153,7 @@ function renderProductDetail(product) {
           <h6 class="fw-semibold">Jumlah:</h6>
           <div class="d-flex align-items-center">
             <button class="btn btn-outline-secondary px-3" id="decreaseQty">−</button>
-            <input type="text" id="quantityInput" class="form-control text-center mx-2" style="width: 70px;" value="1" readonly>
+            <input type="text" id="quantityInput" class="form-control text-center mx-2" style="width: 70px;" value="1" min="1"  readonly>
             <button class="btn btn-outline-secondary px-3" id="increaseQty">+</button>
           </div>
         </div>
@@ -239,7 +239,7 @@ checkoutButton.addEventListener('click', async () => {
     await setDoc(doc(db, "orders", external_id), orderData);
 
     // 🔥 Kirim ke Xendit
-    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
+    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.XENDIT_LIVE_URL}}{% elsif layout.xendit_options == "test" %}{{site.XENDIT_TEST_URL}}{% endif %}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -432,7 +432,6 @@ function animateQuantity(input, newValue) {
   }, 50);
 }
 
-// 🔥 Add ke Cart Firestore
 async function addToCartFirestore(item) {
   if (!currentUser) {
     showToast("Silakan login dulu untuk belanja!", "warning");
@@ -445,45 +444,60 @@ async function addToCartFirestore(item) {
     const q = query(cartRef, where("name", "==", item.name), where("color", "==", item.color), where("size", "==", item.size));
     const snapshot = await getDocs(q);
 
-    const itemWithId = { ...item, productId: id }; // 🆕 Tambahkan productId
+    const itemWithId = { ...item, productId: id };
+    const productRef = doc(db, "products", id);
+    const productSnap = await getDoc(productRef);
+
+    if (!productSnap.exists()) {
+      showToast("Produk tidak ditemukan!", "danger");
+      return;
+    }
+
+    const currentStock = productSnap.data().stock || 0;
+
+    // ❌ Cegah lanjut jika stok tidak cukup
+    if (currentStock < item.quantity) {
+      showToast("Stok tidak mencukupi!", "warning");
+      return;
+    }
 
     if (snapshot.empty) {
+      // Tambah item baru ke keranjang
       await addDoc(cartRef, itemWithId);
       showToast("✅ Produk ditambahkan ke keranjang!", "success");
+    } else {
+      // Update jumlah item di keranjang
+      const docSnap = snapshot.docs[0]; // Ambil satu saja (sudah dicek dengan query)
+      const newQty = docSnap.data().quantity + item.quantity;
 
-      // Kurangi stok
-      const productRef = doc(db, "products", id);
-      const productSnap = await getDoc(productRef);
-      if (productSnap.exists()) {
-        const currentStock = productSnap.data().stock || 0;
-        await updateDoc(productRef, {
-          stock: currentStock - item.quantity
-        });
+      // ❌ Cek ulang jika jumlah total melebihi stok
+      if (newQty > currentStock) {
+        showToast("Jumlah melebihi stok yang tersedia!", "warning");
+        return;
       }
 
-    } else {
-      snapshot.forEach(async docSnap => {
-        await updateDoc(doc(db, `carts/${currentUser.uid}/items/${docSnap.id}`), {
-          quantity: docSnap.data().quantity + item.quantity
-        });
-        showToast("✅ Jumlah produk di keranjang diperbarui!", "success");
-
-        // Kurangi stok
-        const productRef = doc(db, "products", id);
-        const productSnap = await getDoc(productRef);
-        if (productSnap.exists()) {
-          const currentStock = productSnap.data().stock || 0;
-          await updateDoc(productRef, {
-            stock: currentStock - item.quantity
-          });
-        }
+      await updateDoc(doc(db, `carts/${currentUser.uid}/items/${docSnap.id}`), {
+        quantity: newQty
       });
+      showToast("✅ Jumlah produk di keranjang diperbarui!", "success");
     }
+
+    // Kurangi stok setelah sukses update keranjang
+    await updateDoc(productRef, {
+      stock: currentStock - item.quantity
+    });
+
+    // Disable tombol jika stok habis
+    const updatedSnap = await getDoc(productRef);
+    const updatedStock = updatedSnap.exists() ? (updatedSnap.data().stock || 0) : 0;
+    disableButtonsIfOutOfStock(updatedStock);
+
   } catch (error) {
     console.error(error);
     showToast("Gagal tambah ke keranjang: " + error.message, "danger");
   }
 }
+
 
 // 🔥 Like / Unlike Produk
 async function toggleLikeProduct() {
@@ -515,17 +529,18 @@ async function checkLikedStatus() {
 }
 
 // 🔥 Update UI Tombol Like
-function setLikedUI(isLiked) {
-  const likeButton = document.getElementById('likeButton');
-  const icon = likeButton.querySelector('i');
-  likeButton.classList.toggle('btn-outline-danger', isLiked);
-  likeButton.classList.toggle('btn-danger', !isLiked);
-  if (isLiked) {
-    icon.classList.replace('bi-heart', 'bi-heart-fill');
-  } else {
-    icon.classList.replace('bi-heart-fill', 'bi-heart');
+function setLikedUI(productId, isLiked) {
+  const likeBtn = document.querySelector(`.like-btn[data-id="${productId}"]`);
+  if (!likeBtn) return; // hindari error
+
+  const icon = likeBtn.querySelector("i");
+  if (icon) {
+    icon.className = isLiked ? "bi bi-heart-fill" : "bi bi-heart";
+    likeBtn.classList.toggle("btn-danger", isLiked);
+    likeBtn.classList.toggle("btn-light", !isLiked);
   }
 }
+
 console.log("🔍 Cek Elemen:", document.getElementById('rating_form'));
 
 // 🚀 Mulai

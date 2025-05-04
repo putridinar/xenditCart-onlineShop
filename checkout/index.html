@@ -279,7 +279,7 @@ form.addEventListener('submit', async (e) => {
     console.log("✅ Membuat order ID:", external_id);
 
     // KIRIM DATA KE XENDIT
-    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.live_url}}{% elsif layout.xendit_options == "test" %}{{site.test_url}}{% endif %}', {
+    const response = await fetch('{% if layout.xendit_options == "live" %}{{site.XENDIT_LIVE_URL}}{% elsif layout.xendit_options == "test" %}{{site.XENDIT_TEST_URL}}{% endif %}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -8,9 +8,25 @@
 }
 </style>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "{{ site.api_key }}",
   authDomain: "{{ site.auth_domain }}",
@@ -21,8 +37,10 @@ const firebaseConfig = {
   measurementId: "{{ site.measure_id }}"
 };
 
+// Init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 function generateStars(total, count) {
   const avg = count > 0 ? total / count : 0;
@@ -33,79 +51,83 @@ function generateStars(total, count) {
   return stars;
 }
 
-// Fetch & Render Produk
-async function fetchAndRenderProducts() {
+async function fetchAndRenderProducts(user) {
   const grid = document.getElementById("productGrid");
+  const querySnapshot = await getDocs(collection(db, "products"));
+  grid.innerHTML = "";
 
-  try {
-    const querySnapshot = await getDocs(collection(db, "products"));
-    grid.innerHTML = ""; // Hapus loading
+  if (querySnapshot.empty) {
+    grid.innerHTML = "<p class='loading'>Produk belum tersedia.</p>";
+    return;
+  }
 
-    if (querySnapshot.empty) {
-      grid.innerHTML = "<p class='loading'>Produk belum tersedia.</p>";
-      return;
+  querySnapshot.forEach(async docSnap => {
+    const data = docSnap.data();
+    const productId = docSnap.id;
+
+    // Cek apakah user sudah like produk ini
+    let isLiked = false;
+    if (user) {
+      const userLikeDoc = doc(db, `likes/${productId}/users/${user.uid}`);
+      const likeSnap = await getDoc(userLikeDoc);
+      isLiked = likeSnap.exists();
     }
 
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
-      grid.innerHTML += `
-<div class="card position-relative shadow-sm border-0 rounded-4 overflow-hidden tilt-card" data-aos="flip-up" data-aos-delay="300" data-aos-easing="ease-in-sine">
-  
-  <!-- Tombol Favorit di pojok atas -->
-  <button id="likeButton" class="btn btn-light position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" style="z-index: 10;">
-    <i class="bi bi-heart"></i>
-  </button>
+    const card = document.createElement("div");
+    card.className = "card position-relative shadow-sm border-0 rounded-4 overflow-hidden tilt-card";
+    card.setAttribute("data-aos", "flip-up");
+    card.setAttribute("data-aos-delay", "100");
 
-  <!-- Gambar Produk -->
-  <img class="card-img-top" src="${data.image}" alt="${data.name}" style="object-fit: cover; height: 250px;" data-aos="zoom-in" data-aos-delay="200" data-aos-easing="ease-in-sine">
+    card.innerHTML = `
+      <button class="btn ${isLiked ? 'btn-danger' : 'btn-light'} position-absolute top-0 end-0 m-2 shadow-sm rounded-circle like-btn" data-id="${productId}">
+        <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+      </button>
+      <small class="position-absolute top-0 end-0 mt-5 me-3 text-muted like-count" data-id="${productId}">0</small>
 
-  <!-- Isi Card -->
-  <div class="card-body text-center">
-    <h5 class="card-title fw-semibold mb-1">${data.name}</h5>
-    <p class="text-primary fw-bold">Rp ${data.price.toLocaleString('id-ID')}</p>
+      <img class="card-img-top" src="${data.image}" alt="${data.name}" style="object-fit: cover; height: 250px;">
+      <div class="card-body text-center">
+        <h5 class="card-title fw-semibold mb-1">${data.name}</h5>
+        <p class="text-primary fw-bold">Rp ${data.price.toLocaleString('id-ID')}</p>
+        <div class="mb-2">${generateStars(data.ratingTotal, data.ratingCount)}</div>
+        <a href="/product?id=${productId}" class="btn btn-outline-dark w-100 rounded-pill">Lihat Produk</a>
+      </div>
+    `;
 
-    <!-- Rating -->
-    <div class="mb-2">
-      ${generateStars(data.ratingTotal, data.ratingCount)}
-    </div>
-
-    <a href="/product?id=${doc.id}" class="btn btn-outline-dark w-100 rounded-pill">Lihat Produk</a>
-  </div>
-</div>
-      `;
+    // Update jumlah like real-time
+    const likeCountRef = collection(db, `likes/${productId}/users`);
+    onSnapshot(likeCountRef, snapshot => {
+      const count = snapshot.size;
+      const countEl = card.querySelector(`.like-count[data-id="${productId}"]`);
+      if (countEl) countEl.textContent = `${count} Like${count > 1 ? 's' : ''}`;
     });
 
-async function checkLikedStatus() {
-  if (!currentUser) return;
-  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
-  const likeSnap = await getDoc(likeRef);
-  setLikedUI(likeSnap.exists());
-}
+    // Tombol Like
+    const likeBtn = card.querySelector(".like-btn");
+    likeBtn.addEventListener("click", async () => {
+      if (!user) return showToast("Silakan login untuk menyukai produk.", "danger");
 
-function setLikedUI(isLiked) {
-  const likeButton = document.getElementById('likeButton');
-  const icon = likeButton.querySelector('i');
-  likeButton.classList.toggle('btn-outline-danger', isLiked);
-  likeButton.classList.toggle('btn-danger', !isLiked);
-  if (isLiked) {
-    icon.classList.replace('bi-heart', 'bi-heart-fill');
-  } else {
-    icon.classList.replace('bi-heart-fill', 'bi-heart');
-  }
-}
-  } catch (error) {
-    grid.innerHTML = `<p class='loading'>Gagal memuat produk: ${error.message}</p>`;
-  }
-}
+      const userLikeDoc = doc(db, `likes/${productId}/users/${user.uid}`);
+      const snap = await getDoc(userLikeDoc);
 
-fetchAndRenderProducts();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.2/dist/vanilla-tilt.min.js"></script>
-<script>
-  VanillaTilt.init(document.querySelectorAll(".tilt-card"), {
-    max: 15,
-    speed: 400,
-    glare: true,
-    "max-glare": 0.3
+      const icon = likeBtn.querySelector("i");
+      if (snap.exists()) {
+        await deleteDoc(userLikeDoc);
+        likeBtn.classList.remove("btn-danger");
+        likeBtn.classList.add("btn-light");
+        icon.className = "bi bi-heart";
+      } else {
+        await setDoc(userLikeDoc, { likedAt: new Date() });
+        likeBtn.classList.remove("btn-light");
+        likeBtn.classList.add("btn-danger");
+        icon.className = "bi bi-heart-fill";
+      }
+    });
+
+    grid.appendChild(card);
   });
+}
+
+onAuthStateChanged(auth, user => {
+  fetchAndRenderProducts(user);
+});
 </script>
