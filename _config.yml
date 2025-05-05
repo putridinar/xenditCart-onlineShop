@@ -3,7 +3,7 @@ port: 1111
 
 title: Toko Putri
 description: Belanja fashion kekinian, nyaman, dan berkualitas. Buktikan gayamu sekarang!
-
+author:  Putri Dinar
 avatar: https://ionicframework.com/docs/img/demos/avatar.svg
 logo: https://raw.githubusercontent.com/barryclark/jekyll-now/master/images/jekyll-logo.png
 
