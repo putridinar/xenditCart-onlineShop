@@ -34,7 +34,6 @@ permalink: /product
 </style>
 
 <script type="module" src="{{ '/assets/js/xenditCart.js' | relative_url }}"></script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, onSnapshot, doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -105,15 +104,19 @@ onSnapshot(productRef, (docSnap) => {
 
 // 🔥 Render Produk
 function renderProductDetail(product) {
-  const warnaButtons = product.colors?.map(color => `<button type="button" class="btn btn-outline-secondary color-btn" data-color="${color}">${color}</button>`).join('') || '';
-  const ukuranButtons = product.sizes?.map(size => `<button type="button" class="btn btn-outline-secondary size-btn" data-size="${size}">${size}</button>`).join('') || '';
+  const warnaButtons = product.colors?.map(color =>
+    `<button type="button" class="btn btn-outline-secondary color-btn me-1 mb-1" data-color="${color}">${color}</button>`
+  ).join('') || '';
+  const ukuranButtons = product.sizes?.map(size =>
+    `<button type="button" class="btn btn-outline-secondary size-btn me-1 mb-1" data-size="${size}">${size}</button>`
+  ).join('') || '';
 
   container.innerHTML = `
     <div class="row g-5 align-items-start">
       <div class="col-md-6">
         <div class="position-relative shadow rounded-4 overflow-hidden">
           <img class="img-fluid w-100 object-fit-cover" style="max-height: 600px;" src="${product.image}" alt="${product.name}">
-          <button class="btn btn-light position-absolute top-0 end-0 m-3 rounded-circle shadow-sm" id="likeButton">
+          <button class="btn btn-light position-absolute top-0 end-0 m-3 rounded-circle shadow-sm" id="likeButton" data-id="${productId}">
             <i class="bi bi-heart fs-5"></i>
           </button>
         </div>
@@ -143,7 +146,7 @@ function renderProductDetail(product) {
           <h6 class="fw-semibold">Pilih Warna:</h6>
           <div id="colorOptions" class="d-flex flex-wrap gap-2">${warnaButtons}</div>
         </div>
-<div class="d-flex align-items-center justify-content-between mb-3">
+	<div class="d-flex align-items-center justify-content-between mb-3">
         <div class="mb-3">
           <h6 class="fw-semibold">Pilih Ukuran:</h6>
           <div id="sizeOptions" class="d-flex flex-wrap gap-2">${ukuranButtons}</div>
@@ -157,7 +160,7 @@ function renderProductDetail(product) {
             <button class="btn btn-outline-secondary px-3" id="increaseQty">+</button>
           </div>
         </div>
-</div>
+	</div>
         <div class="d-flex gap-3">
 			<button id="checkoutButton" class="btn btn-danger flex-grow-1 py-2 shadow-sm" type="button">
 				<span class="spinner-border spinner-border-sm me-2 d-none" id="checkoutSpinner" role="status" aria-hidden="true"></span>
@@ -351,9 +354,6 @@ function setupInteractions() {
       quantity: parseInt(qtyInput.value)
     });
   });
-
-  const likeButton = document.getElementById('likeButton');
-  likeButton.addEventListener('click', toggleLikeProduct);
 }
 
 // ✅ Ini nanti dipanggil kalau DOM udah beres
@@ -361,12 +361,10 @@ async function setupRating() {
   const ratingForm = document.getElementById('ratingForm');
   const ratingMessage = document.getElementById('ratingMessage');
   if (!ratingForm || !ratingMessage) {
-    console.error("❌ Elemen ratingForm atau ratingMessage tidak ditemukan.");
     return;
   }
 
   if (!productId) {
-    console.error("❌ Product ID tidak ditemukan di URL.");
     return;
   }
 
@@ -425,6 +423,9 @@ async function setupRating() {
   } catch (error) {
     console.error("❌ Error cek rating user:", error);
   }
+
+  const likeButton = document.getElementById('likeButton');
+  likeButton.addEventListener('click', toggleLikeProduct);
 }
 
 // 🔥 Bikin bintang yang sudah di-rate jadi aktif
@@ -539,36 +540,37 @@ async function toggleLikeProduct() {
 }
 
 // 🔥 Cek Apakah Produk Sudah Dilike
-async function checkLikedStatus() {
+async function checkLikedStatus(productId) {
   if (!currentUser) return;
-  const likeRef = doc(db, `likes/${currentUser.uid}/products/${id}`);
+
+  const likeRef = doc(db, `likes/${currentUser.uid}/products/${productId}`);
   const likeSnap = await getDoc(likeRef);
-  setLikedUI(likeSnap.exists());
+
+  setLikedUI(productId, likeSnap.exists());
 }
 
 // 🔥 Update UI Tombol Like
 function setLikedUI(productId, isLiked) {
-  const likeBtn = document.querySelector(`.like-btn[data-id="${productId}"]`);
-  if (!likeBtn) return; // hindari error
+  const likeButton = document.getElementById('likeButton');
+  if (!likeButton) return; // hindari error
 
-  const icon = likeBtn.querySelector("i");
-  if (icon) {
-    icon.className = isLiked ? "bi bi-heart-fill" : "bi bi-heart";
-    likeBtn.classList.toggle("btn-danger", isLiked);
-    likeBtn.classList.toggle("btn-light", !isLiked);
-  }
+  const icon = likeButton.querySelector("i");
+  likeButton.classList.toggle("btn-danger", !isLiked);
+  likeButton.classList.toggle("btn-outline-danger", isLiked);
+  icon.className = isLiked ? "bi bi-heart" : "bi bi-heart-fill";
 }
 
-console.log("🔍 Cek Elemen:", document.getElementById('rating_form'));
+console.log("🔍 Cek Elemen:", document.getElementById('ratingForm'));
 
 // 🚀 Mulai
 loadProduct();
 
 // ✅ Panggil saat DOM sudah siap dan data produk sudah diambil
 document.addEventListener("DOMContentLoaded", () => {
-  setupInteractions();
-  setupRating();
-
+renderProductDetail(importProduct);
+setupInteractions();
+setupRating();
+  
   if (importProduct && typeof importProduct.stock === 'number') {
     disableButtonsIfOutOfStock(importProduct.stock);
   } else {
@@ -577,3 +579,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
+<!-- 🔥 Hover Scale CSS -->
+<style>
+.like-btn:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #dc3545;
+}
+</style>

@@ -63,32 +63,31 @@ permalink: /allProduct
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, deleteDoc, doc, setDoc, getDoc, getDocs, query, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  deleteDoc,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// Firebase Init
 const firebaseConfig = {
-    apiKey: "{{site.api_key}}",
-    authDomain: "{{site.auth_domain}}",
-    projectId: "{{site.project_id}}",
-    storageBucket: "{{site.storage_bucket}}",
-    messagingSenderId: "{{site.sender_id}}",
-    appId: "{{site.app_id}}",
-    measurementId: "{{site.measure_id}}"
+  apiKey: "{{site.api_key}}",
+  authDomain: "{{site.auth_domain}}",
+  projectId: "{{site.project_id}}",
+  storageBucket: "{{site.storage_bucket}}",
+  messagingSenderId: "{{site.sender_id}}",
+  appId: "{{site.app_id}}",
+  measurementId: "{{site.measure_id}}"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-
-let currentUser = null;
-
-onAuthStateChanged(auth, (user) => {
-  currentUser = user;
-  if (user) checkLikedStatus();
-});
-
+// Global Vars
 const productsGrid = document.getElementById("productsGrid");
 const searchInput = document.getElementById("searchInput");
 const filterCategory = document.getElementById("filterCategory");
@@ -96,14 +95,18 @@ const sortPrice = document.getElementById("sortPrice");
 const loadingSpinner = document.getElementById("loadingSpinner");
 const noMoreProducts = document.getElementById("noMoreProducts");
 
-let allProducts = [];
-let filteredProducts = [];
-let page = 1;
+let currentUser = null;
+let allProducts = [], filteredProducts = [], page = 1;
 const pageSize = 10;
-let lastVisible = null;
 let isLoading = false;
 
-// Load semua produk
+// Listen Auth
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  if (user) checkLikedStatus();
+});
+
+// Load Produk
 async function loadProducts() {
   const snapshot = await getDocs(collection(db, "products"));
   allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -111,7 +114,7 @@ async function loadProducts() {
   renderProducts();
 }
 
-// Render produk
+// Render Produk
 function renderProducts(initial = true) {
   const start = (page - 1) * pageSize;
   const end = page * pageSize;
@@ -121,126 +124,93 @@ function renderProducts(initial = true) {
 
   productsToShow.forEach(product => {
     if (!document.getElementById(`product-${product.id}`)) {
-      productsGrid.innerHTML += `
+      const cardHTML = `
 <div class="col-6 col-md-4 col-lg-3 mb-4" id="product-${product.id}">
-  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden hover-card ${product.stock <= 0 ? 'out-of-stock' : ''}" data-aos="flip-left" data-aos-delay="200" data-aos-duration="500" data-aos-easing="ease-in-out">
-      <!-- Badge -->
-      <div class="position-absolute top-0 end-0 m-2 z-2 d-flex flex-column gap-1">
-        ${product.stock <= 0 ? `
-          <span class="badge bg-danger rounded-pill px-3 py-1 shadow-sm">Stok Habis</span>
-        ` : ''}
-        ${product.isNew ? `
-          <span class="badge bg-success rounded-pill px-3 py-1 shadow-sm">Baru</span>
-        ` : ''}
-        ${product.discount ? `
-          <span class="badge bg-peimary rounded-pill px-3 py-1 shadow-sm">Diskon</span>
-        ` : ''}
-      </div>
-
-    <!-- Gambar -->
+  <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden">
+    <div class="position-absolute top-0 end-0 m-2 z-2 d-flex flex-column gap-1">
+      ${product.stock <= 0 ? `<span class='badge bg-danger'>Stok Habis</span>` : ""}
+      ${product.isNew ? `<span class='badge bg-success'>Baru</span>` : ""}
+      ${product.discount ? `<span class='badge bg-warning text-dark'>Diskon</span>` : ""}
+    </div>
     <div class="bg-light ratio ratio-1x1 rounded-top overflow-hidden">
-      <img src="${product.image}" alt="${product.name}" class="img-fluid object-fit-cover transition-scale w-100 h-100">
-      <button id="likeButton" class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle shadow like-btn" title="Suka" style="width:40px;height:40px;">
+      <img src="${product.image}" alt="${product.name}" class="w-100 h-100 object-fit-cover">
+      <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 rounded-circle like-btn" data-id="${product.id}" style="width: 40px;height: 40px;">
         <i class="bi bi-heart"></i>
       </button>
     </div>
-
-    <!-- Isi -->
-    <div class="card-body text-center d-flex flex-column px-3">
-      <div class="rating-stars text-warning small mb-2" data-id="${product.id}">
-        ${generateStars(product)}
-      </div>
+    <div class="card-body text-center d-flex flex-column">
+      <div class="text-warning small mb-2">${generateStars(product)}</div>
       <h6 class="fw-semibold text-dark text-truncate">${product.name}</h6>
       <p class="text-primary fw-bold mb-3">Rp ${product.price.toLocaleString('id-ID')}</p>
-      <a href="/product?id=${product.id}" class="btn btn-outline-primary w-100 shadow-sm mt-auto d-none d-md-block">Lihat Produk</a>
-      <a href="/product?id=${product.id}" class="stretched-link d-md-none"></a>
+      <a href="/product?id=${product.id}" class="btn btn-outline-primary w-100 mt-auto">Lihat Produk</a>
     </div>
   </div>
-</div>
-      `;
-
-      setTimeout(() => {
-  const likeBtn = document.querySelector(`#product-${product.id} #likeButton`);
-  if (likeBtn) {
-    likeBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // Supaya tidak mengganggu link "stretched"
-      toggleLikeProduct(product.id, likeBtn); // ✅ Kirim productId dan btnElement
-    });
-  }
-}, 0);
-
+</div>`;
+      productsGrid.insertAdjacentHTML("beforeend", cardHTML);
     }
   });
 
-  if (end >= filteredProducts.length) {
-    noMoreProducts.classList.remove("d-none");
-  } else {
-    noMoreProducts.classList.add("d-none");
-  }
+  if (end >= filteredProducts.length) noMoreProducts.classList.remove("d-none");
+  else noMoreProducts.classList.add("d-none");
+
+  checkLikedStatus();
 }
-      
+
+// Like/Unlike
 productsGrid.addEventListener("click", (e) => {
   const likeBtn = e.target.closest(".like-btn");
   if (!likeBtn) return;
 
-  const productCard = likeBtn.closest("[id^='product-']");
-  if (!productCard) return;
-
-  const productId = productCard.id.replace("product-", "");
+  const productId = likeBtn.dataset.id;
   toggleLikeProduct(productId, likeBtn);
 });
 
-// 🔥 Like / Unlike Produk
-async function toggleLikeProduct(productId, btnElement) {
-  if (!currentUser) {
-    showToast("Silakan login untuk like produk ini!", "warning");
-    return;
-  }
+async function toggleLikeProduct(productId, btn) {
+  if (!currentUser) return showToast("Silakan login untuk like produk ini!", "warning");
 
-  const likeRef = doc(db, `likes/${currentUser.uid}/products/${productId}`);
-  const likeSnap = await getDoc(likeRef);
+  const ref = doc(db, `likes/${currentUser.uid}/products/${productId}`);
+  const liked = (await getDoc(ref)).exists();
 
-  if (likeSnap.exists()) {
-    await deleteDoc(likeRef);
-    setLikedUI(btnElement, false);
+  if (liked) {
+    await deleteDoc(ref);
+    setLikedUI(btn, false);
     showToast("Produk dihapus dari daftar suka", "warning");
   } else {
-    await setDoc(likeRef, { liked: true });
-    setLikedUI(btnElement, true);
+    await setDoc(ref, { liked: true });
+    setLikedUI(btn, true);
     showToast("Produk ditambahkan ke daftar suka", "success");
   }
 }
 
-
-// 🔥 Cek Apakah Produk Sudah Dilike
 async function checkLikedStatus() {
   if (!currentUser) return;
 
-  const likeCollection = collection(db, `likes/${currentUser.uid}/products`);
-  const likeSnapshot = await getDocs(likeCollection);
-  const likedProductIds = likeSnapshot.docs.map(doc => doc.id);
-
-  likedProductIds.forEach(id => {
-    const btn = document.querySelector(`#product-${id} .like-btn`);
+  const likeSnap = await getDocs(collection(db, `likes/${currentUser.uid}/products`));
+  likeSnap.forEach(docSnap => {
+    const btn = document.querySelector(`.like-btn[data-id='${docSnap.id}']`);
     if (btn) setLikedUI(btn, true);
   });
 }
 
-// 🔥 Update UI Tombol Like
 function setLikedUI(btn, isLiked) {
   const icon = btn.querySelector("i");
-  btn.classList.toggle("btn-outline-danger", isLiked);
   btn.classList.toggle("btn-danger", !isLiked);
-  if (isLiked) {
-    icon.classList.replace("bi-heart", "bi-heart-fill");
-  } else {
-    icon.classList.replace("bi-heart-fill", "bi-heart");
-  }
+  btn.classList.toggle("btn-outline-danger", isLiked);
+  icon.className = isLiked ? "bi bi-heart-fill" : "bi bi-heart";
 }
 
-// Infinite Scroll
+function generateStars(product) {
+  if (!product.ratingTotal || !product.ratingCount) return "Belum ada rating";
+  const avg = product.ratingTotal / product.ratingCount;
+  let html = "";
+  for (let i = 1; i <= 5; i++) {
+    html += i <= avg ? '<i class="bi bi-star-fill"></i>' : i - avg < 1 ? '<i class="bi bi-star-half"></i>' : '<i class="bi bi-star"></i>';
+  }
+  return html;
+}
+
 window.addEventListener("scroll", () => {
-  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50) {
     if (!isLoading && page * pageSize < filteredProducts.length) {
       page++;
       isLoading = true;
@@ -254,7 +224,6 @@ window.addEventListener("scroll", () => {
   }
 });
 
-// Search Produk
 searchInput.addEventListener("input", () => {
   const keyword = searchInput.value.toLowerCase();
   filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(keyword));
@@ -262,57 +231,25 @@ searchInput.addEventListener("input", () => {
   renderProducts();
 });
 
-// Filter Kategori
-filterCategory.addEventListener("change", () => {
-  applyFilterAndSort();
-});
-
-// Sort Harga
-sortPrice.addEventListener("change", () => {
-  applyFilterAndSort();
-});
+filterCategory.addEventListener("change", applyFilterAndSort);
+sortPrice.addEventListener("change", applyFilterAndSort);
 
 function applyFilterAndSort() {
-  const category = filterCategory.value;
+  filteredProducts = [...allProducts];
+  const cat = filterCategory.value;
   const sort = sortPrice.value;
 
-  filteredProducts = [...allProducts];
-
-  if (category) {
-    filteredProducts = filteredProducts.filter(p => p.category === category);
-  }
-
-  if (sort === "asc") {
-    filteredProducts.sort((a, b) => a.price - b.price);
-  } else if (sort === "desc") {
-    filteredProducts.sort((a, b) => b.price - a.price);
-  }
+  if (cat) filteredProducts = filteredProducts.filter(p => p.category === cat);
+  if (sort === "asc") filteredProducts.sort((a, b) => a.price - b.price);
+  else if (sort === "desc") filteredProducts.sort((a, b) => b.price - a.price);
 
   page = 1;
   renderProducts();
 }
 
-function generateStars(product) {
-  if (!product.ratingTotal || !product.ratingCount) return "Belum ada rating";
-
-  const avg = product.ratingTotal / product.ratingCount;
-  let starsHtml = "";
-
-  for (let i = 1; i <= 5; i++) {
-    if (i <= Math.floor(avg)) {
-      starsHtml += `<i class="bi bi-star-fill"></i> `;
-    } else if (i - avg < 1) {
-      starsHtml += `<i class="bi bi-star-half"></i> `;
-    } else {
-      starsHtml += `<i class="bi bi-star"></i> `;
-    }
-  }
-  return starsHtml;
-}
-
-// Mulai Load
 document.addEventListener("DOMContentLoaded", loadProducts);
 </script>
+
 
 <!-- 🔥 Hover Scale CSS -->
 <style>

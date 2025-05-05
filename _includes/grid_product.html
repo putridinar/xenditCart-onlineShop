@@ -107,8 +107,8 @@ async function fetchAndRenderProducts(user) {
 
     const card = document.createElement("div");
     card.className = "card position-relative shadow-sm border-0 rounded-4 overflow-hidden tilt-card";
-    card.setAttribute("data-aos", "flip-up");
-    card.setAttribute("data-aos-delay", "100");
+    card.setAttribute("data-aos", "slide-up");
+    card.setAttribute("data-aos-delay", "50");
 
     card.innerHTML = `
     <button class="like-btn ${isLiked ? 'btn-danger' : 'btn-light'} position-absolute top-0 end-0 m-2 shadow-sm like-btn" data-id="${productId}">
